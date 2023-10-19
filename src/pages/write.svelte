@@ -19,18 +19,17 @@
     import axios from "axios";
     let processing = false;
     let loc = {
-        city: "Delhi",
+        city: " New Delhi",
         country: "India",
     };
 
     import { v4 as uuidv4 } from "uuid";
     async function post() {
         processing = true;
-        axios
-            .get("https://api.ipapi.is/?key=64bedbf80e6a4a7f")
-            .then(async function (response) {
-                // handle success
-                loc = response.data["location"];
+        // axios
+        //     .get("https://api.ipapi.is/?key=64bedbf80e6a4a7f")
+        //     .then(async function (response) {
+                // loc = response.data["location"];
                 let data = {
                     heading: heading,
                     desc: desc,
@@ -49,7 +48,7 @@
                     .put(data);
                 processing = false;
                 f7router.back();
-            });
+            // });
     }
     let disabledd;
     function prcess() {

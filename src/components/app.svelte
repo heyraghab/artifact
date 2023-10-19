@@ -86,8 +86,10 @@
       let txt;
       if (a.err) {
         txt = a.err;
+        loginScreenOpened = true;
       } else {
         txt = "logged in";
+        loginScreenOpened = false;
       }
       f7.toast
         .create({
@@ -97,7 +99,6 @@
         })
         .open();
       localStorage.setItem("keys", JSON.stringify(a.sea));
-      loginScreenOpened = false;
     });
   }
 

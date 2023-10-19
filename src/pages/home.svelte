@@ -19,10 +19,10 @@
   import axios from "axios";
   import Card from "../components/card.svelte";
 
-  let sel = "city";
+  let sel = "country";
 
   let loc = {
-    city: "Delhi",
+    city: "New Delhi",
     country: "India",
   };
   let feed = [];
@@ -87,13 +87,13 @@
     done();
   }
 
-  axios
-    .get("https://api.ipapi.is/?key=64bedbf80e6a4a7f")
-    .then(async function (response) {
-      // handle success
-      loc = response.data["location"];
-      load(() => {});
-    });
+  // axios
+  //   .get("https://api.ipapi.is/?key=64bedbf80e6a4a7f")
+  //   .then(async function (response) {
+  //     // handle success
+  //     loc = response.data["location"];
+  //     load(() => {});
+  //   });
 
   let sortbytime = "asc";
   function process() {

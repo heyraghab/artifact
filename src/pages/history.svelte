@@ -5,12 +5,10 @@
     let posts = [];
 
     function load(done) {
-        db.user()
-            .get("posts")
-            .map((a, b) => {
-                a = JSON.parse(a);
-                posts = [a, ...posts];
-            });
+        user.get("posts").map((a, b) => {
+            a = JSON.parse(a);
+            posts = [a, ...posts];
+        });
         done();
     }
     load(() => {});
@@ -22,7 +20,7 @@
             );
             return found === index;
         });
-        posts = posts.sort((a, b) => {
+        posts = posts.sort((b, a) => {
             return new Date(a.time) - new Date(b.time);
         });
     }
