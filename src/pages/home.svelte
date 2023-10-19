@@ -9,7 +9,6 @@
     ListItem,
     Button,
     Popover,
-    Card,
     CardHeader,
     CardContent,
     CardFooter,
@@ -18,24 +17,31 @@
   } from "framework7-svelte";
   import { db } from "../js/gun";
   import axios from "axios";
+  import Card from "../components/card.svelte";
+
   let sel = "city";
 
-  let loc;
+  let loc = {
+    city: "Delhi",
+    country: "India",
+  };
   let feed = [];
 
   function load(done) {
     if (sel == "city") {
-      db.get("#" + loc.city).map((a) => {
+      db.get("#" + loc.city).map((a, b) => {
         let data = JSON.parse(a);
-        console.log(data);
-        feed = [
-          {
-            heading: data.heading,
-            time: data.time,
-            desc: data.desc,
-          },
-          ...feed,
-        ];
+        if (data.uid) {
+          feed = [
+            {
+              heading: data.heading,
+              time: data.time,
+              desc: data.desc,
+              uid: data.uid,
+            },
+            ...feed,
+          ];
+        }
       });
     } else if (sel == "country") {
       db.get("#" + loc.country).map((a) => {
@@ -46,7 +52,6 @@
             data.time &&
             data.desc !== "undefined"
           ) {
-            console.log(data);
             feed = [
               {
                 heading: data.heading,
@@ -67,7 +72,6 @@
             data.time &&
             data.desc !== "undefined"
           ) {
-            console.log(data);
             feed = [
               {
                 heading: data.heading,
@@ -88,27 +92,52 @@
     .then(async function (response) {
       // handle success
       loc = response.data["location"];
-      console.log(loc);
       load(() => {});
     });
 
+  let sortbytime = "asc";
   function process() {
     feed = feed.filter((object, index) => {
       const found = feed.findIndex((obj) => obj.heading === object.heading);
       return found === index;
     });
-    feed = feed.sort((a, b) => {
-      return new Date(a.time) - new Date(b.time);
+    feed = feed.sort((b, a) => {
+      if (sortbytime == "asc") {
+        return new String(a.time).localeCompare(b.time);
+      } else if (sortbytime == "des") {
+        return new String(b.time).localeCompare(a.time);
+      }
     });
   }
 
+  function update() {
+    feed = [];
+    load(() => {});
+  }
+
+  let render = true;
+  function updatesort() {
+    process();
+    render = false;
+    setInterval(() => {
+      render = true;
+    }, 100);
+  }
+
+  $: sel, update();
+  $: sortbytime, updatesort();
   $: feed, process();
 </script>
 
 <Page ptr ptrMousewheel={true} onPtrRefresh={load} name="home">
-  <Block>
-    <div style="width: 20vw;">
+  <Block style="display: flex;">
+    <div style="width: {sel == 'country' ? '28' : '20'}vw;">
       <Button fill round small popoverOpen=".popover-menu">{sel}</Button>
+    </div>
+    <div style="width: 20vw;">
+      <Button round small popoverOpen=".popover-menusorttime"
+        >{sortbytime == "asc" ? "latest" : "old"}</Button
+      >
     </div>
   </Block>
   <Popover class="popover-menu" style="width: 50vw;">
@@ -137,30 +166,34 @@
     </List>
   </Popover>
 
+  <Popover class="popover-menusorttime" style="width: 50vw;">
+    <List>
+      <ListItem
+        onClick={() => {
+          sortbytime = "asc";
+        }}
+        popoverClose
+        title="latest"
+      />
+      <ListItem
+        onClick={() => {
+          sortbytime = "des";
+        }}
+        popoverClose
+        title="old"
+      />
+    </List>
+  </Popover>
+
   <Fab position="right-bottom">
     <Link color="white" tabLink="#view-write" href="/write/">
       <Icon f7="square_pencil" />
     </Link>
   </Fab>
 
-  {#each feed as f}
-    <Card outlineMd class="demo-card-header-pic">
-      <CardHeader valign="bottom">
-        <div style="font-size: large;">
-          {f.heading}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {f.desc}
-      </CardContent>
-      <CardFooter>
-        <Link>
-          <Icon f7="arrow_up" size="20" />
-        </Link>
-        <Link>
-          <Icon f7="captions_bubble_fill" size="20" />
-        </Link>
-      </CardFooter>
-    </Card>
-  {/each}
+  {#if render}
+    {#each feed as f}
+      <Card {f} />
+    {/each}
+  {/if}
 </Page>

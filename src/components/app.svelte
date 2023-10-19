@@ -96,6 +96,8 @@
           closeTimeout: 5000,
         })
         .open();
+      localStorage.setItem("keys", JSON.stringify(a.sea));
+      loginScreenOpened = false;
     });
   }
 
@@ -185,21 +187,13 @@
         iconIos="f7:house_fill"
         text=""
       />
-      <Link
-        tabLink="#view-catalog"
-        iconIos="f7:search"
-        text=""
-      />
+      <Link tabLink="#view-catalog" iconIos="f7:search" text="" />
       <Link
         tabLink="#view-history"
         iconIos="f7:person_crop_circle_fill"
         text=""
       />
-      <Link
-        tabLink="#view-settings"
-        iconIos="f7:gear"
-        text=""
-      />
+      <Link tabLink="#view-settings" iconIos="f7:gear" text="" />
     </Toolbar>
 
     <!-- Your main view/tab, should have "view-main" class. It also has "tabActive" prop -->

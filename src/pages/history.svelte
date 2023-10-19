@@ -1,17 +1,7 @@
 <script>
-    import {
-        Block,
-        BlockTitle,
-        Card,
-        CardContent,
-        CardFooter,
-        CardHeader,
-        Icon,
-        Link,
-        Navbar,
-        Page,
-    } from "framework7-svelte";
+    import { Block, Navbar, Page } from "framework7-svelte";
     import { db, user } from "../js/gun";
+    import Card from "../components/card.svelte";
     let posts = [];
 
     function load(done) {
@@ -19,7 +9,6 @@
             .get("posts")
             .map((a, b) => {
                 a = JSON.parse(a);
-                console.log("hua?", a);
                 posts = [a, ...posts];
             });
         done();
@@ -45,24 +34,7 @@
 <Page ptr ptrMousewheel={true} onPtrRefresh={load} name="history">
     <Block>
         {#each posts as f}
-            <Card outlineMd class="demo-card-header-pic">
-                <CardHeader valign="bottom">
-                    <div style="font-size: large;">
-                        {f.heading}
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {f.desc}
-                </CardContent>
-                <CardFooter>
-                    <Link>
-                        <Icon f7="arrow_up" size="20" />
-                    </Link>
-                    <Link>
-                        <Icon f7="captions_bubble_fill" size="20" />
-                    </Link>
-                </CardFooter>
-            </Card>
+            <Card {f} />
         {/each}
     </Block>
 </Page>
