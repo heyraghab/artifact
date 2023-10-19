@@ -34,7 +34,7 @@
     <!-- Your main view/tab, should have "view-main" class. It also has "tabActive" prop -->
     <View id="view-home" main tab tabActive url="/" />
 
-    <View id="view-write" tab url="/write" name="write" />
+    <View id="view-write" tab name="write" />
 
     <!-- Catalog View -->
     <View id="view-catalog" name="catalog" tab url="/catalog/" />
@@ -90,6 +90,8 @@
   </LoginScreen>
 </App>
 <script>
+  import eruda from "eruda";
+  eruda.init()
   import { onMount } from 'svelte';
   import { getDevice }  from 'framework7/lite-bundle';
   import {

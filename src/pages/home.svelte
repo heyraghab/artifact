@@ -1,11 +1,6 @@
 <script>
   import {
     Page,
-    Navbar,
-    NavLeft,
-    NavTitle,
-    NavTitleLarge,
-    NavRight,
     Link,
     Toolbar,
     Block,
@@ -20,27 +15,69 @@
     CardFooter,
     Icon,
     Fab,
-    FabButton,
-    FabButtons,
   } from "framework7-svelte";
-  import { writable } from "svelte/store";
+  import { db } from "../js/gun";
+  import axios from "axios";
   let sel = "city";
 
-  let feed = [
-    {
-      title: "2 dead as i crash car",
-      desc: "two dead as i did an accdent tonight while being drunk",
+  let loc;
+  let feed = [];
 
-      date: new Date(),
-    },
-  ];
-
-  function write() {
-    f7router.navigate("/write/", {});
+  function load(done) {
+    if (sel == "city") {
+      db.get("#" + 'Delhi').map((a) => {
+        let data = JSON.parse(a);
+        console.log(data);
+        feed = [
+          {
+            heading: data.heading,
+            time: data.time,
+            desc: data.desc,
+          },
+          ...feed,
+        ];
+      });
+    } else if (sel == "country") {
+      db.get("#" + loc.country).map((a) => {
+        if (a) {
+          let data = JSON.parse(a);
+        if (data.heading !== 'undefined' && data.time && data.desc !== 'undefined') {
+          console.log(data);
+          feed = [
+            {
+              heading: data.heading,
+              time: data.time,
+              desc: data.desc,
+            },
+            ...feed,
+          ];
+        }
+        }
+      });
+    }
+    done();
   }
+
+  axios.get("http://ip-api.com/json/").then(async function (response) {
+    // handle success
+    loc = response.data;
+    load(() => {});
+  });
+
+  function process() {
+    feed = feed.filter((object, index) => {
+      const found = feed.findIndex((obj) => obj.heading === object.heading);
+      return found === index;
+    });
+    feed = feed.sort((a, b) => {
+      return new Date(a.time) - new Date(b.time);
+    });
+  }
+
+  $: feed, process();
 </script>
 
-<Page name="home">
+<Page ptr ptrMousewheel={true} onPtrRefresh={load} name="home">
   <Block>
     <div style="width: 20vw;">
       <Button fill round small popoverOpen=".popover-menu">{sel}</Button>
@@ -72,8 +109,8 @@
     </List>
   </Popover>
 
-  <Fab  position="right-bottom">
-    <Link color="white" tabLink="#view-write" href="/write/" >
+  <Fab position="right-bottom">
+    <Link color="white" tabLink="#view-write" href="/write/">
       <Icon f7="square_pencil" />
     </Link>
   </Fab>
@@ -82,7 +119,7 @@
     <Card outlineMd class="demo-card-header-pic">
       <CardHeader valign="bottom">
         <div style="font-size: large;">
-          {f.title}
+          {f.heading}
         </div>
       </CardHeader>
       <CardContent>
