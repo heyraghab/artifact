@@ -26,12 +26,15 @@
     ListButton,
     BlockFooter,
     Button,
+    Progressbar,
   } from "framework7-svelte";
 
   import capacitorApp from "../js/capacitor-app";
   import routes from "../js/routes";
   import store from "../js/store";
   import { db, user } from "../js/gun";
+
+  let loading;
 
   const device = getDevice();
   // Framework7 Parameters
@@ -77,7 +80,9 @@
   let password = "";
 
   function signIn() {
+    loading = true;
     user.auth(username, password, (a) => {
+      loading = false;
       let txt;
       if (a.err) {
         txt = a.err;
@@ -95,6 +100,7 @@
   }
 
   function signUp() {
+    loading = true;
     db.user().create(username, password, (a) => {
       if (a.err) {
         f7.toast
@@ -108,13 +114,16 @@
       user.auth(username, password, (a) => {
         localStorage.setItem("keys", JSON.stringify(a.sea));
         loginScreenOpened = false;
+        loading = false;
       });
     });
   }
 
   if (localStorage.getItem("keys")) {
+    loading = true;
     user.auth(localStorage.getItem("keys"), (a) => {
       loginScreenOpened = false;
+      loading = false;
     });
   }
 </script>
@@ -124,31 +133,48 @@
   <Views tabs class="safe-areas">
     <LoginScreen class="demo-login-screen" opened={loginScreenOpened}>
       <Page loginScreen>
-        <LoginScreenTitle>artifact</LoginScreenTitle>
-        <List form>
-          <ListInput
-            label="Username"
-            type="text"
-            placeholder="Your username"
-            value={username}
-            onInput={(e) => (username = e.target.value)}
-          />
-          <ListInput
-            label="Password"
-            type="password"
-            placeholder="Your password"
-            value={password}
-            onInput={(e) => (password = e.target.value)}
-          />
-        </List>
-        <Block style="display: flex;justify-content:center;">
-          <Button style="width: 20vw;" round fill onClick={signIn}>login</Button
-          >
-          <Button style="width: 20vw;" round onClick={signUp}>signup</Button>
-        </Block>
-        <BlockFooter>
-          by registering you agree to our term and conditions
-        </BlockFooter>
+        {#if loading}
+          <Block>
+            loading...
+            <Progressbar infinite />
+          </Block>
+        {:else}
+          <LoginScreenTitle>artifact</LoginScreenTitle>
+          <List form>
+            <ListInput
+              label="Username"
+              type="text"
+              placeholder="Your username"
+              value={username}
+              onInput={(e) => (username = e.target.value)}
+            />
+            <ListInput
+              label="Password"
+              type="password"
+              placeholder="Your password"
+              value={password}
+              onInput={(e) => (password = e.target.value)}
+            />
+          </List>
+          <Block style="display: flex;justify-content:center;">
+            <Button
+              disabled={loading}
+              style="width: 20vw;"
+              round
+              fill
+              onClick={signIn}>login</Button
+            >
+            <Button
+              disabled={loading}
+              style="width: 20vw;"
+              round
+              onClick={signUp}>signup</Button
+            >
+          </Block>
+          <BlockFooter>
+            by registering you agree to our term and conditions
+          </BlockFooter>
+        {/if}
       </Page>
     </LoginScreen>
     <!-- Tabbar for switching views-tabs -->
@@ -157,19 +183,21 @@
         tabLink="#view-home"
         tabLinkActive
         iconIos="f7:house_fill"
-        iconMd="material:home"
         text=""
       />
       <Link
         tabLink="#view-catalog"
         iconIos="f7:search"
-        iconMd="material:view_list"
+        text=""
+      />
+      <Link
+        tabLink="#view-history"
+        iconIos="f7:person_crop_circle_fill"
         text=""
       />
       <Link
         tabLink="#view-settings"
         iconIos="f7:gear"
-        iconMd="material:settings"
         text=""
       />
     </Toolbar>
@@ -178,6 +206,8 @@
     <View id="view-home" main tab tabActive url="/" />
 
     <View id="view-write" tab name="write" />
+
+    <View id="view-history" tab name="history" url="/history" />
 
     <!-- Catalog View -->
     <View id="view-catalog" name="catalog" tab url="/catalog/" />

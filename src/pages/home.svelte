@@ -41,29 +41,56 @@
       db.get("#" + loc.country).map((a) => {
         if (a) {
           let data = JSON.parse(a);
-        if (data.heading !== 'undefined' && data.time && data.desc !== 'undefined') {
-          console.log(data);
-          feed = [
-            {
-              heading: data.heading,
-              time: data.time,
-              desc: data.desc,
-            },
-            ...feed,
-          ];
+          if (
+            data.heading !== "undefined" &&
+            data.time &&
+            data.desc !== "undefined"
+          ) {
+            console.log(data);
+            feed = [
+              {
+                heading: data.heading,
+                time: data.time,
+                desc: data.desc,
+              },
+              ...feed,
+            ];
+          }
         }
+      });
+    } else {
+      db.get("#world").map((a) => {
+        if (a) {
+          let data = JSON.parse(a);
+          if (
+            data.heading !== "undefined" &&
+            data.time &&
+            data.desc !== "undefined"
+          ) {
+            console.log(data);
+            feed = [
+              {
+                heading: data.heading,
+                time: data.time,
+                desc: data.desc,
+              },
+              ...feed,
+            ];
+          }
         }
       });
     }
     done();
   }
 
-  axios.get("https://api.ipapi.is/?key=64bedbf80e6a4a7f").then(async function (response) {
-    // handle success
-    loc = response.data['location'];
-    console.log(loc);
-    load(() => {});
-  });
+  axios
+    .get("https://api.ipapi.is/?key=64bedbf80e6a4a7f")
+    .then(async function (response) {
+      // handle success
+      loc = response.data["location"];
+      console.log(loc);
+      load(() => {});
+    });
 
   function process() {
     feed = feed.filter((object, index) => {

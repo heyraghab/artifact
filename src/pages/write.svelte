@@ -13,7 +13,7 @@
 
     let heading = "",
         desc = "";
-    import { db } from "../js/gun";
+    import { db, user } from "../js/gun";
     import axios from "axios";
     let processing = false;
     function post() {
@@ -31,6 +31,7 @@
             db.get(`#${loc.city}`).get(hash).put(data);
             db.get(`#${loc.country}`).get(hash).put(data);
             db.get(`#world`).get(hash).put(data);
+            user.get('posts').get(Math.floor(new Date().getTime() / 1000)).put(data)
             processing = false;
             f7router.back();
         });
