@@ -18,9 +18,9 @@
     let processing = false;
     function post() {
         processing = true;
-        axios.get("http://ip-api.com/json/").then(async function (response) {
+        axios.get("https://api.ipapi.is/?key=64bedbf80e6a4a7f").then(async function (response) {
             // handle success
-            let loc = response.data;
+            let loc = response.data['location'];
             let data = {
                 heading: heading,
                 desc: desc,

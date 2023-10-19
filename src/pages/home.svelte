@@ -25,7 +25,7 @@
 
   function load(done) {
     if (sel == "city") {
-      db.get("#" + 'Delhi').map((a) => {
+      db.get("#" + loc.city).map((a) => {
         let data = JSON.parse(a);
         console.log(data);
         feed = [
@@ -58,9 +58,10 @@
     done();
   }
 
-  axios.get("http://ip-api.com/json/").then(async function (response) {
+  axios.get("https://api.ipapi.is/?key=64bedbf80e6a4a7f").then(async function (response) {
     // handle success
-    loc = response.data;
+    loc = response.data['location'];
+    console.log(loc);
     load(() => {});
   });
 
@@ -97,7 +98,7 @@
           sel = "country";
         }}
         popoverClose
-        title="Your County"
+        title="Your Country"
       />
       <ListItem
         onClick={() => {
