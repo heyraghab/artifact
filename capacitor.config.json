@@ -1,0 +1,13 @@
+{
+  "appId": "com.news.artifact",
+  "appName": "artifact",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  },
+  "cordova": {}
+}
