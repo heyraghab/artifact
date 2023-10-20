@@ -17,42 +17,49 @@
   import { db, loggedin } from "../js/gun";
   import axios from "axios";
   import Card from "../components/card.svelte";
+  import { v4 } from "uuid";
 
   let sel = "city";
+  let sortbytime = "asc";
   let loc;
   let feed = [];
 
   async function fetchh(node) {
-    console.log(`loading ${node}`);
-    db.get("#" + node).once((a, b) => {
-      console.log(a);
-      if (a) {
-        delete a._;
-        Object.entries(a).forEach((a) => {
-          try {
-            let data = new Object(JSON.parse(a[1]));
-            if (
-              data.hasOwnProperty("uid") &&
-              data.hasOwnProperty("time") &&
-              data.hasOwnProperty("heading")
-            ) {
-              feed = [
-                {
-                  heading: data.heading,
-                  time: data.time,
-                  desc: data.desc,
-                  uid: data.uid,
-                },
-                ...feed,
-              ];
-            }
-          } catch (error) {}
-        });
-      }
-    });
+    console.warn(`loading ${node}`);
+    await db
+      .get("#" + node)
+      .once((a, b) => {
+        console.log(a);
+        if (a) {
+          delete a._;
+          Object.entries(a).forEach((a) => {
+            try {
+              let data = new Object(JSON.parse(a[1]));
+              if (
+                data.hasOwnProperty("uid") &&
+                data.hasOwnProperty("time") &&
+                data.hasOwnProperty("heading")
+              ) {
+                feed = [
+                  {
+                    heading: data.heading,
+                    time: data.time,
+                    desc: data.desc,
+                    uid: data.uid,
+                  },
+                  ...feed,
+                ];
+              }
+            } catch (error) {}
+          });
+        }
+      })
+      .then(() => {
+        process();
+      });
   }
 
-  async function load(done) {
+  async function load() {
     if (loc) {
       if (sel == "city") {
         fetchh(loc.city);
@@ -62,17 +69,14 @@
         fetchh("world");
       }
     }
-    done();
   }
 
-  let sortbytime = "asc";
   function process() {
-    console.log(feed);
     feed = feed.filter((object, index) => {
-      const found = feed.findIndex((obj) => obj.heading === object.heading);
+      const found = feed.findIndex((obj) => obj.uid === object.uid);
       return found === index;
     });
-    feed = feed.sort((b, a) => {
+    feed.sort((b, a) => {
       if (sortbytime == "asc") {
         return new String(a.time).localeCompare(b.time);
       } else if (sortbytime == "des") {
@@ -80,14 +84,6 @@
       }
     });
     console.log(feed);
-  }
-
-  function update() {
-    load(() => {});
-  }
-
-  function updatesort() {
-    process();
   }
 
   loggedin.subscribe((a) => {
@@ -98,7 +94,7 @@
           loc = response.data;
           if (loc) {
             localStorage.setItem("loc", JSON.stringify(loc));
-            load(() => {});
+            load();
           }
         })
         .catch((e) => {
@@ -107,25 +103,33 @@
           if (localStorage.getItem("loc")) {
             loc = JSON.parse(localStorage.getItem("loc"));
           }
-          load(() => {});
+          load();
         });
     }
   });
 
-  $: sel, update();
-  $: sortbytime, updatesort();
-  $: feed, process();
+  $: sel, load();
+  $: sortbytime, process();
+  // $: feed, process();
 
   async function sleep(t) {
-    return new Promise((r)=>{
+    return new Promise((r) => {
       setTimeout(() => {
-        r()
+        r();
       }, t);
-    })
-  } 
+    });
+  }
 </script>
 
-<Page ptr ptrMousewheel={true} onPtrRefresh={load} name="home">
+<Page
+  ptr
+  ptrMousewheel={true}
+  onPtrRefresh={(done) => {
+    load();
+    done();
+  }}
+  name="home"
+>
   <Block style="display: flex;">
     <div style="width: {sel == 'country' ? '28' : '20'}vw;">
       <Button fill round small popoverOpen=".popover-menu">{sel}</Button>
@@ -189,37 +193,35 @@
   >
     <Icon f7="square_pencil" />
   </Fab>
-  {#if feed.length == 0}
+  {#if feed.length == 0 && $loggedin}
     {#await sleep(3000)}
-    <Cardd style="padding: 20px;">
-      <SkeletonBlock
-        class="skeleton-effect-wave"
-        style="width: 100%; height: 20px; border-radius: 20px"
-      />
-      <br />
-      <SkeletonBlock
-        class="skeleton-effect-wave"
-        style="width: 70%; height: 20px; border-radius: 20px"
-      />
-    </Cardd>
-    <Cardd style="padding: 20px;">
-      <SkeletonBlock
-        class="skeleton-effect-wave"
-        style="width: 80%; height: 20px; border-radius: 20px"
-      />
-      <br />
-      <SkeletonBlock
-        class="skeleton-effect-wave"
-        style="width: 90%; height: 20px; border-radius: 20px"
-      />
-    </Cardd>
-    {:then a} 
-      <BlockFooter>
-        BIG NEWS! WE'RE OUT OF IT!!!
-      </BlockFooter>
+      <Cardd style="padding: 20px;">
+        <SkeletonBlock
+          class="skeleton-effect-wave"
+          style="width: 100%; height: 20px; border-radius: 20px"
+        />
+        <br />
+        <SkeletonBlock
+          class="skeleton-effect-wave"
+          style="width: 70%; height: 20px; border-radius: 20px"
+        />
+      </Cardd>
+      <Cardd style="padding: 20px;">
+        <SkeletonBlock
+          class="skeleton-effect-wave"
+          style="width: 80%; height: 20px; border-radius: 20px"
+        />
+        <br />
+        <SkeletonBlock
+          class="skeleton-effect-wave"
+          style="width: 90%; height: 20px; border-radius: 20px"
+        />
+      </Cardd>
+    {:then a}
+      <BlockFooter>BIG NEWS! WE'RE OUT OF IT!!!</BlockFooter>
     {/await}
   {/if}
-  {#each feed as f}
+  {#each feed as f (v4())}
     <Card {f} />
   {/each}
 </Page>
