@@ -15,10 +15,10 @@
         SkeletonBlock,
         Messagebar,
         Button,
+        BlockFooter,
     } from "framework7-svelte";
     import { db, user } from "../js/gun";
     export let f;
-    let commentsopened = false;
 
     let vote = [];
     let voted = false;
@@ -68,39 +68,70 @@
         voted = true;
         vote = [...vote, data];
     }
+    import { v4 } from "uuid";
+
+    let comment = [];
+    let messageText;
+    let commentsopened = false;
+
+    let comments_graph = db.get("comments").get(`#${f.uid}`);
+
+    // async function upvotecomment() {
+    //     let data = {
+    //         pub: user.is.pub,
+    //         vote: "up",
+    //     };
+    //     data = JSON.stringify(data);
+    //     var hash = await SEA.work(data, null, null, {
+    //         name: "SHA-256",
+    //     });
+    //     db.get("commentupvotes")
+    //         .get(`#${f.uid}`)
+    //         .get(hash)
+    //         .put(data, (a) => {});
+    //     voted = true;
+    // }
 
     function process() {
-        vote = vote.filter((object, index) => {
-            const found = vote.findIndex((obj) => obj.pub === object.pub);
+        comment = comment.filter((object, index) => {
+            const found = comment.findIndex(
+                (obj) => obj.uid === object.uid || obj.comment == undefined
+            );
             return found === index;
         });
-    }
-
-    // $: vote, process();
-
-    // let comment = [];
-    // let loadingcomments = true,
-    //     messageText;
-    // let comments_graph = db.get("comments").get(`#${f.uid}`);
-
-    // function processcomments() {
-    //     comment = comment.filter((object, index) => {
-    //         const found = comment.findIndex((obj) => obj.uid == object.uid);
-    //         return found === index;
-    //     });
-    // }
-    // $: comment, processcomments();
-
-    function loadcomments() {
-        comments_graph.map(async (a) => {
-            try {
-                a = JSON.parse(a);
-                comment = [a, ...comment];
-            } catch (error) {}
+        comment.sort((b, a) => {
+            return new String(a.time).localeCompare(b.time);
         });
-        loadingcomments = false;
     }
-    import { v4 } from "uuid";
+
+    async function loadcomments() {
+        commentsopened = true;
+        try {
+            await db
+                .get("comments")
+                .get(`#${f.uid}`)
+                .once((a) => {
+                    delete a._;
+                    Object.entries(a).forEach((c) => {
+                        try {
+                            console.log(c);
+                            let data = JSON.parse(c[1]);
+                            if (
+                                data.hasOwnProperty("uid") &&
+                                data.hasOwnProperty("time") &&
+                                data.hasOwnProperty("comment")
+                            ) {
+                                comment = [...comment, data];
+                            }
+                        } finally {
+                            process();
+                        }
+                    });
+                });
+        } catch (error) {
+            comment = [];
+        }
+    }
     async function sendMessage() {
         if (messageText) {
             let data = {
@@ -108,82 +139,22 @@
                 uid: v4().split("-").join(""),
                 time: Math.floor(new Date().getTime() / 1000),
             };
+            console.log(data);
             data = JSON.stringify(data);
             var hash = await SEA.work(data, null, null, {
                 name: "SHA-256",
             });
-            comments_graph.get(hash).put(data, (a) => {});
+            await comments_graph.get(hash).put(data);
             messageText = "";
+            loadcomments();
         }
     }
-
-    async function upvotecomment() {
-        let data = {
-            pub: user.is.pub,
-            vote: "up",
-        };
-        data = JSON.stringify(data);
-        var hash = await SEA.work(data, null, null, {
-            name: "SHA-256",
-        });
-        db.get("commentupvotes")
-            .get(`#${f.uid}`)
-            .get(hash)
-            .put(data, (a) => {});
-        voted = true;
-    }
+    async function upvotecomment() {}
 </script>
 
-<!-- 
-<Card outlineMd class="demo-card-header-pic">
-    <CardHeader valign="bottom">
-        <div style="font-size: large;">
-            {f.heading}
-        </div>
-    </CardHeader>
-    <CardContent>
-        {f.desc}
-    </CardContent>
-    <CardFooter>
-        {#if voted}
-            <Link
-                color="red"
-                onClick={() => {
-                    f7.toast
-                        .create({
-                            text: "already voted",
-                            position: "bottom",
-                            closeTimeout: 1000,
-                        })
-                        .open();
-                }}
-            >
-                <Icon f7="arrow_up" size="20" />
-                {vote.length}
-            </Link>
-        {:else}
-            <Link onClick={upvote}>
-                <Icon f7="arrow_up" size="20" />
-                {voted}
-            </Link>
-        {/if}
-        <Link
-            onClick={() => {
-                commentsopened = true;
-            }}
-        >
-            <Icon f7="captions_bubble_fill" size="20" />
-        </Link>
-    </CardFooter>
-</Card> -->
-<!-- 
 <Popup
     class="demo-popup"
     opened={commentsopened}
-    onPopupOpened={() => {
-        commentsopened = true;
-        loadcomments();
-    }}
     onPopupClosed={() => {
         commentsopened = false;
     }}
@@ -195,18 +166,18 @@
             </NavRight>
         </Navbar>
         <Block>
-            {#if !loadingcomments}
-                {#each comment as f}
+            {#if comment.length > 0}
+                {#each comment as f (v4())}
                     <Card style="padding: 10px;">
                         <div style="display: flex;">
-                            <div
+                            <Button
                                 on:click={() => {
                                     upvotecomment(f.uid);
                                 }}
                                 style="margin: 10px;"
                             >
                                 <Icon f7="arrow_up" color="blue" size="15" />
-                            </div>
+                            </Button>
                             <div
                                 style="display: flex;justify-items: center;align-items: center;"
                             >
@@ -215,6 +186,8 @@
                         </div>
                     </Card>
                 {/each}
+            {:else if comment == 0}
+                <BlockFooter>Be The First One To Comment</BlockFooter>
             {:else}
                 <Card style="padding: 20px;">
                     <SkeletonBlock
@@ -246,12 +219,16 @@
             value={messageText}
             onInput={(e) => (messageText = e.target.value)}
         >
-            <a class="link icon-only" slot="inner-end" on:click={sendMessage}>
+            <Button
+                class="link icon-only"
+                slot="inner-end"
+                on:click={sendMessage}
+            >
                 <Icon ios="f7:arrow_up_circle_fill" md="material:send" />
-            </a>
+            </Button>
         </Messagebar>
     </Page>
-</Popup> -->
+</Popup>
 <Card outline>
     <CardHeader style="padding-bottom: 0px;">
         {f.heading}
@@ -272,6 +249,9 @@
         >
             <Icon f7="arrow_up" size="18" />
             {vote.length}
+        </Button>
+        <Button onClick={loadcomments}>
+            <Icon f7="chat_bubble" size="18" />
         </Button>
     </CardFooter>
 </Card>
