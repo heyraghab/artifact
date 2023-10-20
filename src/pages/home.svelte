@@ -1,17 +1,13 @@
 <script>
+  export let f7router;
   import {
     Page,
     Link,
-    Toolbar,
     Block,
-    BlockTitle,
     List,
     ListItem,
     Button,
     Popover,
-    CardHeader,
-    CardContent,
-    CardFooter,
     Icon,
     Fab,
   } from "framework7-svelte";
@@ -19,84 +15,73 @@
   import axios from "axios";
   import Card from "../components/card.svelte";
 
-  let sel = "country";
-
-  let loc = {
-    city: "New Delhi",
-    country: "India",
-  };
+  let sel = "city";
+  let loc;
   let feed = [];
 
-  function load(done) {
-    if (sel == "city") {
-      db.get("#" + loc.city).map((a, b) => {
-        let data = JSON.parse(a);
-        if (data.uid) {
-          feed = [
-            {
-              heading: data.heading,
-              time: data.time,
-              desc: data.desc,
-              uid: data.uid,
-            },
-            ...feed,
-          ];
-        }
-      });
-    } else if (sel == "country") {
-      db.get("#" + loc.country).map((a) => {
-        if (a) {
-          let data = JSON.parse(a);
-          if (
-            data.heading !== "undefined" &&
-            data.time &&
-            data.desc !== "undefined"
-          ) {
-            feed = [
-              {
-                heading: data.heading,
-                time: data.time,
-                desc: data.desc,
-              },
-              ...feed,
-            ];
-          }
-        }
-      });
-    } else {
-      db.get("#world").map((a) => {
-        if (a) {
-          let data = JSON.parse(a);
-          if (
-            data.heading !== "undefined" &&
-            data.time &&
-            data.desc !== "undefined"
-          ) {
-            feed = [
-              {
-                heading: data.heading,
-                time: data.time,
-                desc: data.desc,
-              },
-              ...feed,
-            ];
-          }
-        }
-      });
+  axios
+    .get("https://ipapi.co/json/")
+    .then(async function (response) {
+      loc = response.data;
+      if (loc) {
+        localStorage.setItem("loc", JSON.stringify(loc));
+        load(() => {});
+      }
+    })
+    .catch((e) => {
+      console.log("error fetching location");
+      console.log(e);
+      if (localStorage.getItem("loc")) {
+        loc = JSON.parse(localStorage.getItem("loc"));
+      }
+      load(() => {});
+    });
+
+  async function fetchh(node) {
+    db.get("#" + node).once((a, b) => {
+      console.log(a);
+      if (a) {
+        delete a._;
+        Object.entries(a).forEach((a) => {
+          try {
+            let data = new Object(JSON.parse(a[1]));
+            if (
+              data.hasOwnProperty("uid") &&
+              data.hasOwnProperty("time") &&
+              data.hasOwnProperty("heading")
+            ) {
+              feed = [
+                {
+                  heading: data.heading,
+                  time: data.time,
+                  desc: data.desc,
+                  uid: data.uid,
+                },
+                ...feed,
+              ];
+            }
+          } catch (error) {}
+        });
+      }
+    });
+  }
+
+  async function load(done) {
+    if (loc) {
+      if (sel == "city") {
+        fetchh(loc.city);
+      } else if (sel == "country") {
+        fetchh(loc.country);
+      } else {
+        fetchh("world");
+      }
     }
     done();
   }
 
-  // axios
-  //   .get("https://api.ipapi.is/?key=64bedbf80e6a4a7f")
-  //   .then(async function (response) {
-  //     // handle success
-  //     loc = response.data["location"];
-  //     load(() => {});
-  //   });
-
   let sortbytime = "asc";
   function process() {
+    console.log(feed);
     feed = feed.filter((object, index) => {
       const found = feed.findIndex((obj) => obj.heading === object.heading);
       return found === index;
@@ -108,20 +93,15 @@
         return new String(b.time).localeCompare(a.time);
       }
     });
+    console.log(feed);
   }
 
   function update() {
-    feed = [];
     load(() => {});
   }
 
-  let render = true;
   function updatesort() {
     process();
-    render = false;
-    setInterval(() => {
-      render = true;
-    }, 100);
   }
 
   $: sel, update();
@@ -185,15 +165,15 @@
     </List>
   </Popover>
 
-  <Fab position="right-bottom">
-    <Link color="white" tabLink="#view-write" href="/write/">
-      <Icon f7="square_pencil" />
-    </Link>
+  <Fab
+    onClick={() => {
+      f7router.navigate("/write");
+    }}
+    position="right-bottom"
+  >
+    <Icon f7="square_pencil" />
   </Fab>
-
-  {#if render}
-    {#each feed as f}
-      <Card {f} />
-    {/each}
-  {/if}
+  {#each feed as f}
+    <Card {f} />
+  {/each}
 </Page>

@@ -1,29 +1,22 @@
 <script>
-  import eruda from "eruda";
-  eruda.init();
+  // import eruda from "eruda";
+  // eruda.init();
   import { onMount } from "svelte";
   import { getDevice } from "framework7/lite-bundle";
   import {
     f7,
     f7ready,
     App,
-    Panel,
     Views,
     View,
-    Popup,
     Page,
-    Navbar,
     Toolbar,
-    NavRight,
     Link,
     Block,
-    BlockTitle,
     LoginScreen,
     LoginScreenTitle,
     List,
-    ListItem,
     ListInput,
-    ListButton,
     BlockFooter,
     Button,
     Progressbar,
@@ -89,6 +82,7 @@
         loginScreenOpened = true;
       } else {
         txt = "logged in";
+        localStorage.setItem("keys", JSON.stringify(a.sea));
         loginScreenOpened = false;
       }
       f7.toast
@@ -98,7 +92,6 @@
           closeTimeout: 5000,
         })
         .open();
-      localStorage.setItem("keys", JSON.stringify(a.sea));
     });
   }
 
@@ -113,19 +106,31 @@
             closeTimeout: 5000,
           })
           .open();
+      } else {
+        user.auth(username, password, (a) => {
+          localStorage.setItem("keys", JSON.stringify(a.sea));
+          loginScreenOpened = false;
+        });
       }
-      user.auth(username, password, (a) => {
-        localStorage.setItem("keys", JSON.stringify(a.sea));
-        loginScreenOpened = false;
-        loading = false;
-      });
+      loading = false;
     });
   }
 
   if (localStorage.getItem("keys")) {
     loading = true;
-    user.auth(localStorage.getItem("keys"), (a) => {
-      loginScreenOpened = false;
+    user.auth(JSON.parse(localStorage.getItem("keys")), (a) => {
+      if (a.err) {
+        f7.toast
+          .create({
+            text: a.err,
+            position: "bottom",
+            closeTimeout: 5000,
+          })
+          .open();
+      
+      } else {
+        loginScreenOpened = false;
+      }
       loading = false;
     });
   }

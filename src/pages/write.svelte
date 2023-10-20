@@ -18,24 +18,33 @@
     import { db, user } from "../js/gun";
     import axios from "axios";
     let processing = false;
-    let loc = {
-        city: " New Delhi",
-        country: "India",
-    };
+    let loc;
 
     import { v4 as uuidv4 } from "uuid";
     async function post() {
         processing = true;
-        // axios
-        //     .get("https://api.ipapi.is/?key=64bedbf80e6a4a7f")
-        //     .then(async function (response) {
-                // loc = response.data["location"];
+        await axios
+            .get("https://ipapi.co/json/")
+            .then(async function (response) {
+                loc = response.data;
+                console.log(loc);
+                localStorage.setItem("loc", loc);
+            })
+            .catch((e) => {
+                console.log("error fetching location");
+                console.log(e);
+                if (localStorage.getItem("loc")) {
+                    loc = JSON.parse(localStorage.getItem("loc"));
+                }
+            })
+            .finally(async (e) => {
                 let data = {
                     heading: heading,
                     desc: desc,
                     time: Math.floor(new Date().getTime() / 1000),
-                    uid: await uuidv4().split('-').join(''),
+                    uid: await uuidv4().split("-").join(""),
                 };
+                console.log(data);
                 data = JSON.stringify(data);
                 var hash = await SEA.work(data, null, null, {
                     name: "SHA-256",
@@ -48,7 +57,7 @@
                     .put(data);
                 processing = false;
                 f7router.back();
-            // });
+            });
     }
     let disabledd;
     function prcess() {

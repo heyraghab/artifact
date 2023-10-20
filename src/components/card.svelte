@@ -12,47 +12,62 @@
         Block,
         Navbar,
         NavRight,
-        ListItem,
-        List,
         SkeletonBlock,
         Messagebar,
+        Button,
     } from "framework7-svelte";
-    import { onMount } from "svelte";
     import { db, user } from "../js/gun";
     export let f;
     let commentsopened = false;
 
     let vote = [];
     let voted = false;
-    let upvoltes_graph = db.get("upvotes").get(`#${f.uid}`);
-    onMount(() => {
-        upvoltes_graph.map((a) => {
-            try {
-                if (JSON.parse(a).pub == user.is.pub) {
-                    voted = true;
-                }
-                vote = [...vote, JSON.parse(a)];
-                console.log(vote);
-            } catch (error) {
-                console.log(error);
+    let userpub = user.is.pub;
+    db.get("upvotes")
+        .get(`#${f.uid}`)
+        .once((a) => {
+            if (a) {
+                delete a._;
+                Object.entries(a).forEach((a) => {
+                    try {
+                        a = JSON.parse(a[1]);
+                        if (a.pub == userpub) {
+                            voted = true;
+                        }
+                        vote = [...vote, a];
+                    } catch (error) {}
+                });
             }
         });
-    });
 
-    let upvote = async () => {
-        if (!voted) {
-            let data = {
-                pub: user.is.pub,
-                vote: "up",
-            };
-            data = JSON.stringify(data);
-            var hash = await SEA.work(data, null, null, {
-                name: "SHA-256",
+    async function upvote() {
+        let data = {
+            pub: user.is.pub,
+            vote: "up",
+        };
+        data = JSON.stringify(data);
+        var hash = await SEA.work(data, null, null, {
+            name: "SHA-256",
+        });
+        await db
+            .get("upvotes")
+            .get(`#${f.uid}`)
+            .get(hash)
+            .put(data, (a) => {
+                if (a.err) {
+                    f7.toast
+                        .create({
+                            text: a.err,
+                            position: "bottom",
+                            closeTimeout: 3000,
+                        })
+                        .open();
+                } else {
+                }
             });
-            upvoltes_graph.get(hash).put(data, (a) => {});
-            voted = true;
-        }
-    };
+        voted = true;
+        vote = [...vote, data];
+    }
 
     function process() {
         vote = vote.filter((object, index) => {
@@ -61,36 +76,33 @@
         });
     }
 
-    $: vote, process();
+    // $: vote, process();
 
-    let comment = [];
-    let loadingcomments = true,
-        messageText;
-    let comments_graph = db.get("comments").get(`#${f.uid}`);
+    // let comment = [];
+    // let loadingcomments = true,
+    //     messageText;
+    // let comments_graph = db.get("comments").get(`#${f.uid}`);
 
-    function processcomments() {
-        comment = comment.filter((object, index) => {
-            const found = comment.findIndex((obj) => obj.uid == object.uid);
-            return found === index;
-        });
-    }
-    $: comment, processcomments();
+    // function processcomments() {
+    //     comment = comment.filter((object, index) => {
+    //         const found = comment.findIndex((obj) => obj.uid == object.uid);
+    //         return found === index;
+    //     });
+    // }
+    // $: comment, processcomments();
 
     function loadcomments() {
         comments_graph.map(async (a) => {
             try {
                 a = JSON.parse(a);
                 comment = [a, ...comment];
-            } catch (error) {
-                console.log(error);
-            }
+            } catch (error) {}
         });
         loadingcomments = false;
     }
     import { v4 } from "uuid";
     async function sendMessage() {
         if (messageText) {
-            console.log(messageText);
             let data = {
                 comment: messageText,
                 uid: v4().split("-").join(""),
@@ -100,14 +112,12 @@
             var hash = await SEA.work(data, null, null, {
                 name: "SHA-256",
             });
-            comments_graph.get(hash).put(data, (a) => {
-                console.log(a);
-            });
+            comments_graph.get(hash).put(data, (a) => {});
             messageText = "";
         }
     }
 
-    async function upvotecomment(uid) {
+    async function upvotecomment() {
         let data = {
             pub: user.is.pub,
             vote: "up",
@@ -117,15 +127,14 @@
             name: "SHA-256",
         });
         db.get("commentupvotes")
-            .get(`#${uid}`)
+            .get(`#${f.uid}`)
             .get(hash)
-            .put(data, (a) => {
-                console.log("ok");
-            });
+            .put(data, (a) => {});
         voted = true;
     }
 </script>
 
+<!-- 
 <Card outlineMd class="demo-card-header-pic">
     <CardHeader valign="bottom">
         <div style="font-size: large;">
@@ -155,7 +164,7 @@
         {:else}
             <Link onClick={upvote}>
                 <Icon f7="arrow_up" size="20" />
-                {vote.length}
+                {voted}
             </Link>
         {/if}
         <Link
@@ -166,8 +175,8 @@
             <Icon f7="captions_bubble_fill" size="20" />
         </Link>
     </CardFooter>
-</Card>
-
+</Card> -->
+<!-- 
 <Popup
     class="demo-popup"
     opened={commentsopened}
@@ -190,9 +199,6 @@
                 {#each comment as f}
                     <Card style="padding: 10px;">
                         <div style="display: flex;">
-                            <!-- svelte-ignore missing-declaration -->
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div
                                 on:click={() => {
                                     upvotecomment(f.uid);
@@ -235,18 +241,37 @@
             {/if}
         </Block>
 
-        <!-- svelte-ignore a11y-missing-attribute -->
         <Messagebar
             placeholder="Type a comment"
             value={messageText}
             onInput={(e) => (messageText = e.target.value)}
         >
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <!-- svelte-ignore missing-declaration -->
             <a class="link icon-only" slot="inner-end" on:click={sendMessage}>
                 <Icon ios="f7:arrow_up_circle_fill" md="material:send" />
             </a>
         </Messagebar>
     </Page>
-</Popup>
+</Popup> -->
+<Card outline>
+    <CardHeader style="padding-bottom: 0px;">
+        {f.heading}
+    </CardHeader>
+    <CardContent style="font-size: 13px;padding-top: 10px;">
+        {f.desc}
+    </CardContent>
+    <CardFooter style="font-size: 12px;padding-top: 0px;">
+        <Button
+            disabled={voted}
+            color={voted ? "red" : "blue"}
+            small
+            on:click={() => {
+                if (!voted) {
+                    upvote();
+                }
+            }}
+        >
+            <Icon f7="arrow_up" size="18" />
+            {vote.length}
+        </Button>
+    </CardFooter>
+</Card>
