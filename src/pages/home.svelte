@@ -4,14 +4,17 @@
     Page,
     Link,
     Block,
+    Card as Cardd,
     List,
     ListItem,
     Button,
     Popover,
     Icon,
     Fab,
+    SkeletonBlock,
+    BlockFooter,
   } from "framework7-svelte";
-  import { db } from "../js/gun";
+  import { db, loggedin } from "../js/gun";
   import axios from "axios";
   import Card from "../components/card.svelte";
 
@@ -19,25 +22,8 @@
   let loc;
   let feed = [];
 
-  axios
-    .get("https://ipapi.co/json/")
-    .then(async function (response) {
-      loc = response.data;
-      if (loc) {
-        localStorage.setItem("loc", JSON.stringify(loc));
-        load(() => {});
-      }
-    })
-    .catch((e) => {
-      console.log("error fetching location");
-      console.log(e);
-      if (localStorage.getItem("loc")) {
-        loc = JSON.parse(localStorage.getItem("loc"));
-      }
-      load(() => {});
-    });
-
   async function fetchh(node) {
+    console.log(`loading ${node}`);
     db.get("#" + node).once((a, b) => {
       console.log(a);
       if (a) {
@@ -104,9 +90,39 @@
     process();
   }
 
+  loggedin.subscribe((a) => {
+    if (a == true) {
+      axios
+        .get("https://ipapi.co/json/")
+        .then(async function (response) {
+          loc = response.data;
+          if (loc) {
+            localStorage.setItem("loc", JSON.stringify(loc));
+            load(() => {});
+          }
+        })
+        .catch((e) => {
+          console.log("error fetching location");
+          console.log(e);
+          if (localStorage.getItem("loc")) {
+            loc = JSON.parse(localStorage.getItem("loc"));
+          }
+          load(() => {});
+        });
+    }
+  });
+
   $: sel, update();
   $: sortbytime, updatesort();
   $: feed, process();
+
+  async function sleep(t) {
+    return new Promise((r)=>{
+      setTimeout(() => {
+        r()
+      }, t);
+    })
+  } 
 </script>
 
 <Page ptr ptrMousewheel={true} onPtrRefresh={load} name="home">
@@ -173,6 +189,36 @@
   >
     <Icon f7="square_pencil" />
   </Fab>
+  {#if feed.length == 0}
+    {#await sleep(3000)}
+    <Cardd style="padding: 20px;">
+      <SkeletonBlock
+        class="skeleton-effect-wave"
+        style="width: 100%; height: 20px; border-radius: 20px"
+      />
+      <br />
+      <SkeletonBlock
+        class="skeleton-effect-wave"
+        style="width: 70%; height: 20px; border-radius: 20px"
+      />
+    </Cardd>
+    <Cardd style="padding: 20px;">
+      <SkeletonBlock
+        class="skeleton-effect-wave"
+        style="width: 80%; height: 20px; border-radius: 20px"
+      />
+      <br />
+      <SkeletonBlock
+        class="skeleton-effect-wave"
+        style="width: 90%; height: 20px; border-radius: 20px"
+      />
+    </Cardd>
+    {:then a} 
+      <BlockFooter>
+        BIG NEWS! WE'RE OUT OF IT!!!
+      </BlockFooter>
+    {/await}
+  {/if}
   {#each feed as f}
     <Card {f} />
   {/each}

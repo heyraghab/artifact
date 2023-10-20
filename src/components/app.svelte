@@ -75,15 +75,17 @@
   function signIn() {
     loading = true;
     user.auth(username, password, (a) => {
-      loading = false;
+      loading = true;
       let txt;
       if (a.err) {
+        loading = false;
         txt = a.err;
         loginScreenOpened = true;
       } else {
+        loading=false
         txt = "logged in";
-        localStorage.setItem("keys", JSON.stringify(a.sea));
         loginScreenOpened = false;
+        localStorage.setItem("keys", JSON.stringify(a.sea));
       }
       f7.toast
         .create({
@@ -127,7 +129,6 @@
             closeTimeout: 5000,
           })
           .open();
-      
       } else {
         loginScreenOpened = false;
       }
