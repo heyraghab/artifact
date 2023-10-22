@@ -5,28 +5,138 @@
     List,
     ListInput,
     ListItem,
-    Toggle,
     BlockTitle,
     Button,
-    Range,
     Block,
+    BlockFooter,
+    f7,
   } from "framework7-svelte";
   export let f7router;
   import { db, user } from "../js/gun";
+  import { v4 } from "uuid";
+
+  let relay,
+    current = localStorage.getItem("peer") || "https://peer.wallie.io/gun";
+  let relaylist = [
+    "https://peer.wallie.io/gun",
+    "https://plankton-app-6qfp3.ondigitalocean.app/",
+    "https://gun-manhattan.herokuapp.com/gun",
+  ];
+
+  function validURL(str) {
+    var pattern = new RegExp(
+      "^(https?:\\/\\/)?" + // protocol
+        "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+        "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+        "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+        "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+        "(\\#[-a-z\\d_]*)?$",
+      "i"
+    ); // fragment locator
+    return !!pattern.test(str);
+  }
 </script>
 
 <Page name="settings">
   <Navbar title="Settings" />
   <Block>
-    <BlockTitle>
-      Account
-    </BlockTitle>
-    <Button color='red' fill round onClick={()=>{
-      user.leave()
-      localStorage.clear()
-      sessionStorage.clear()
-      f7router.navigate('/')
-    }}>
+    <BlockTitle>Relay</BlockTitle>
+    <List>
+      <div style="display: flex;justify-items: center;align-items: center;">
+        <ListInput
+          bind:value={relay}
+          placeholder="https://plankton-app-6qfp3.ondigitalocean.app/gun"
+        />
+        <Button
+          round
+          small
+          fill
+          onClick={() => {
+            if (!validURL(relay)) {
+              f7.toast
+                .create({
+                  text: "not a valid url",
+                  position: "center",
+                  closeTimeout: 2000,
+                })
+                .open();
+              return;
+            }
+            localStorage.setItem("peer", relay);
+            db.opt({
+              peers: [relay],
+            });
+            current = relay;
+            f7.toast
+              .create({
+                text: "set",
+                position: "center",
+                closeTimeout: 2000,
+              })
+              .open();
+            relay = "";
+          }}>set</Button
+        >
+      </div>
+    </List>
+    <div>
+      current: {current}
+      <Button
+        fill
+        round
+        small
+        style="width: 40vw;"
+        onClick={() => {
+          let rr = "https://peer.wallie.io/gun";
+          localStorage.setItem("peer", rr);
+          db.opt({
+            peers: [rr],
+          });
+          current = rr;
+        }}
+      >
+        restore defualt
+      </Button>
+    </div>
+    <List>
+      <div>Other relays</div>
+      {#each relaylist as r (v4())}
+        <ListItem
+          style="font-size: small;opacity: 80%;"
+          onClick={() => {
+            localStorage.setItem("peer", r);
+            db.opt({
+              peers: [r],
+            });
+            f7.toast
+              .create({
+                text: "set",
+                position: "center",
+                closeTimeout: 2000,
+              })
+              .open();
+            current = r;
+          }}
+        >
+          {r}
+        </ListItem>
+      {/each}
+    </List>
+    <BlockFooter>relays help connect you to other peers</BlockFooter>
+  </Block>
+  <Block>
+    <BlockTitle>Account</BlockTitle>
+    <Button
+      color="red"
+      fill
+      round
+      onClick={() => {
+        user.leave();
+        localStorage.clear();
+        sessionStorage.clear();
+        f7router.navigate("/");
+      }}
+    >
       Log Out
     </Button>
   </Block>

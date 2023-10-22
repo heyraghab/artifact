@@ -76,22 +76,6 @@
 
     let comments_graph = db.get("comments").get(`#${f.uid}`);
 
-    // async function upvotecomment() {
-    //     let data = {
-    //         pub: user.is.pub,
-    //         vote: "up",
-    //     };
-    //     data = JSON.stringify(data);
-    //     var hash = await SEA.work(data, null, null, {
-    //         name: "SHA-256",
-    //     });
-    //     db.get("commentupvotes")
-    //         .get(`#${f.uid}`)
-    //         .get(hash)
-    //         .put(data, (a) => {});
-    //     voted = true;
-    // }
-
     function process() {
         comment = comment.filter((object, index) => {
             const found = comment.findIndex(
@@ -176,7 +160,7 @@
                                 }}
                                 style="margin: 10px;"
                             >
-                                <Icon f7="arrow_up" color="blue" size="15" />
+                                <Icon f7="person" color="blue" size="15" />
                             </Button>
                             <div
                                 style="display: flex;justify-items: center;align-items: center;"

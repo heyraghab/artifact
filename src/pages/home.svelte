@@ -62,7 +62,7 @@
   async function load() {
     if (loc) {
       if (sel == "city") {
-        fetchh(loc.city);
+        fetchh(loc.state);
       } else if (sel == "country") {
         fetchh(loc.country);
       } else {
@@ -86,12 +86,20 @@
     console.log(feed);
   }
 
-  loggedin.subscribe((a) => {
+  import { Geolocation } from "@capacitor/geolocation";
+  import { config } from "../js/init";
+  loggedin.subscribe(async (a) => {
     if (a == true) {
+      const coordinates = await Geolocation.getCurrentPosition();
+
       axios
-        .get("https://ipapi.co/json/")
+        .post(config.api + "/api/geo", {
+          lat: coordinates.coords.latitude,
+          long: coordinates.coords.longitude,
+        })
         .then(async function (response) {
-          loc = response.data;
+          loc = response.data["address"];
+          console.log(loc);
           if (loc) {
             localStorage.setItem("loc", JSON.stringify(loc));
             load();
@@ -191,7 +199,7 @@
     }}
     position="right-bottom"
   >
-    <Icon f7="square_pencil" />
+    <Icon f7="pencil" size="25" />
   </Fab>
   {#if feed.length == 0 && $loggedin}
     {#await sleep(3000)}

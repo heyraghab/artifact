@@ -4,13 +4,12 @@
   "version": "1.0.0",
   "description": "artifact",
   "repository": "",
-  "license": "UNLICENSED",
   "scripts": {
     "start": "npm run dev",
     "dev": "cross-env NODE_ENV=development vite",
     "build": "cross-env NODE_ENV=production vite build && npx workbox generateSW workbox-config.js",
-    "build-capacitor-ios": "cross-env NODE_ENV=production vite build && npx cap copy ios",
     "build-capacitor-android": "cross-env NODE_ENV=production vite build && npx cap copy android",
+    "sync": "npx cap sync",
     "postinstall": "cpy --flat ./node_modules/framework7-icons/fonts/*.* ./src/fonts/ && cpy --flat ./node_modules/material-icons/iconfont/*.* ./src/fonts/"
   },
   "browserslist": [
@@ -24,9 +23,10 @@
     "@capacitor/app": "^5.0.6",
     "@capacitor/browser": "^5.1.0",
     "@capacitor/core": "^5.5.0",
+    "@capacitor/filesystem": "^5.1.4",
+    "@capacitor/geolocation": "^5.0.6",
     "@capacitor/ios": "^5.5.0",
     "@capacitor/keyboard": "^5.0.6",
-    "@capacitor/splash-screen": "^5.0.6",
     "@capacitor/status-bar": "^5.0.6",
     "axios": "^1.5.1",
     "dom7": "^4.0.6",
