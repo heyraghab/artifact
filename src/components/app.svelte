@@ -2,8 +2,7 @@
   import eruda from "eruda";
   eruda.init();
   // locking orientation
-  window.screen.orientation.lock('portrait');
-
+  window.screen.orientation.lock("portrait");
 
   import { onMount } from "svelte";
   import { getDevice } from "framework7/lite-bundle";
@@ -24,6 +23,7 @@
     BlockFooter,
     Button,
     Progressbar,
+    Icon,
   } from "framework7-svelte";
 
   import capacitorApp from "../js/capacitor-app";
@@ -76,7 +76,62 @@
   let username = "";
   let password = "";
 
-  function signIn() {
+  import { Geolocation } from "@capacitor/geolocation";
+  async function setloc() {}
+
+  async function setup() {
+    return new Promise(async (resolve, reject) => {
+      await Geolocation.checkPermissions().then((a) => {
+        if (a.coarseLocation == "denied" || a.coarseLocation == "prompt") {
+          //not granted
+          f7ready(() => {
+            f7.dialog.confirm(
+              "geographical data required for news!",
+              "setup",
+              () => {
+                //granted
+                Geolocation.requestPermissions().then((a) => {
+                  if (a.coarseLocation == "granted") {
+                    resolve();
+                  } else {
+                    setloc();
+                  }
+                });
+              },
+              () => {
+                //denied
+                f7.dialog.confirm(
+                  "allow location for a better experience",
+                  "setup",
+                  () => {
+                    //granted
+                    Geolocation.requestPermissions().then((a) => {
+                      if (a.coarseLocation == "granted") {
+                        resolve();
+                      } else {
+                        setloc();
+                      }
+                    });
+                  },
+                  () => {
+                    setloc();
+                  }
+                );
+              }
+            );
+          });
+        } else {
+        }
+      });
+    });
+  }
+
+  import { Capacitor } from "@capacitor/core";
+  import axios from "axios";
+  async function signIn() {
+    if (Capacitor.isNativePlatform()) {
+      await setup();
+    }
     loading = true;
     user.auth(username, password, (a) => {
       loading = true;
@@ -86,7 +141,7 @@
         txt = a.err;
         loginScreenOpened = true;
       } else {
-        loading=false
+        loading = false;
         txt = "logged in";
         loginScreenOpened = false;
         localStorage.setItem("keys", JSON.stringify(a.sea));
@@ -101,7 +156,10 @@
     });
   }
 
-  function signUp() {
+  async function signUp() {
+    if (Capacitor.isNativePlatform()) {
+      await setup();
+    }
     loading = true;
     db.user().create(username, password, (a) => {
       if (a.err) {
@@ -144,6 +202,14 @@
 <App {...f7params}>
   <!-- Views/Tabs container -->
   <Views tabs class="safe-areas">
+    <LoginScreen class="demo-login-screen" opened={useroffline}>
+      <Page>
+        <center>
+          <Icon f7="wifi_exclamationmark" color="yellow" />
+          <div>you're offline!</div>
+        </center>
+      </Page>
+    </LoginScreen>
     <LoginScreen class="demo-login-screen" opened={loginScreenOpened}>
       <Page loginScreen>
         {#if loading}

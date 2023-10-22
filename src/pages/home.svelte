@@ -25,6 +25,7 @@
   let feed = [];
 
   async function fetchh(node) {
+    console.log("loading ", node);
     await db
       .get("#" + node)
       .once((a, b) => {
@@ -50,6 +51,8 @@
               }
             } catch (error) {}
           });
+        } else {
+          console.log('ok');
         }
       })
       .then(() => {
@@ -58,6 +61,7 @@
   }
 
   async function load() {
+    console.log("starting load");
     if (loc) {
       if (sel == "city") {
         fetchh(loc.state);
@@ -87,16 +91,24 @@
   import { config } from "../js/init";
   loggedin.subscribe(async (a) => {
     if (a == true) {
-      const coordinates = await Geolocation.getCurrentPosition();
+      let options = {
+        pub: user.is.pub,
+      };
 
-      axios
-        .post(config.api + "/api/geo", {
-          lat: coordinates.coords.latitude,
-          long: coordinates.coords.longitude,
-          pub: user.is.pub,
-        })
+      try {
+        const coordinates = await Geolocation.getCurrentPosition();
+        if (coordinates) {
+          options["lat"] = coordinates.coords.latitude;
+          options["long"] = coordinates.coords.longitude;
+        }
+      } catch (error) {}
+
+      await axios
+        .post(config.api + "/api/geo", options)
         .then(async function (response) {
-          loc = response.data["address"];
+          console.log(response.data);
+          loc = response.data;
+          fetchh(loc.state);
           if (loc) {
             localStorage.setItem("loc", JSON.stringify(loc));
             load();

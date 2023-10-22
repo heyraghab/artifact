@@ -26,14 +26,21 @@
   import { v4 as uuidv4 } from "uuid";
 
   async function post() {
-    const coordinates = await Geolocation.getCurrentPosition();
     processing = true;
+    let options = {
+      pub: user.is.pub,
+    };
+
+    try {
+      const coordinates = await Geolocation.getCurrentPosition();
+      if (coordinates) {
+        options["lat"] = coordinates.coords.latitude;
+        options["long"] = coordinates.coords.longitude;
+      }
+    } catch (error) {}
+
     axios
-      .post(config.api + "/api/geo", {
-        lat: coordinates.coords.latitude,
-        long: coordinates.coords.longitude,
-        pub: user.is.pub
-      })
+      .post(config.api + "/api/geo", options)
       .then(async function (response) {
         loc = response.data;
         localStorage.setItem("loc", JSON.stringify(loc));

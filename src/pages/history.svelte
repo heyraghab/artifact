@@ -1,5 +1,5 @@
 <script>
-    import { Block, Navbar, Page } from "framework7-svelte";
+    import { Block, BlockHeader, Navbar, Page } from "framework7-svelte";
     import { db, user } from "../js/gun";
     import Card from "../components/card.svelte";
     let posts = [];
@@ -31,6 +31,13 @@
 <Navbar title="history" />
 <Page ptr ptrMousewheel={true} onPtrRefresh={load} name="history">
     <Block>
+        {#if posts.length == 0}
+            <Block>
+                <BlockHeader>
+                    No Posts Yet!
+                </BlockHeader>
+            </Block>
+        {/if}
         {#each posts as f}
             <Card {f} />
         {/each}
