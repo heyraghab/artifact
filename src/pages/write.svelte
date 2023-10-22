@@ -32,11 +32,12 @@
       .post(config.api + "/api/geo", {
         lat: coordinates.coords.latitude,
         long: coordinates.coords.longitude,
+        pub: user.is.pub
       })
       .then(async function (response) {
         loc = response.data;
         console.log(loc);
-        localStorage.setItem("loc", loc);
+        localStorage.setItem("loc", JSON.stringify(loc));
       })
       .catch((e) => {
         console.log("error fetching location");
@@ -46,11 +47,12 @@
         }
       })
       .finally(async (e) => {
+        let uidd = await uuidv4().split("-").join("");
         let data = {
           heading: heading,
           desc: desc,
           time: Math.floor(new Date().getTime() / 1000),
-          uid: await uuidv4().split("-").join(""),
+          uid: uidd,
         };
         console.log(data);
         data = JSON.stringify(data);
@@ -69,6 +71,7 @@
           heading: heading,
           content: desc,
           pub: user.is.pub || "",
+          uid: uidd,
         });
         processing = false;
         f7router.back();
@@ -91,13 +94,13 @@
 <Navbar title="write" backLink=" " backLinkUrl="/" />
 <Page>
   <List>
-    <ListItem>
+    <!-- <ListItem>
       <div>
         <Button outline round onClick={pickFile}>
           <Icon f7="plus" size="24" />
         </Button>
       </div>
-    </ListItem>
+    </ListItem> -->
     <ListInput
       bind:value={heading}
       label="Headline"

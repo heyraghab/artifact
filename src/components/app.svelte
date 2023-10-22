@@ -1,6 +1,10 @@
 <script>
-  // import eruda from "eruda";
-  // eruda.init();
+  import eruda from "eruda";
+  eruda.init();
+  // locking orientation
+  window.screen.orientation.lock('portrait');
+
+
   import { onMount } from "svelte";
   import { getDevice } from "framework7/lite-bundle";
   import {

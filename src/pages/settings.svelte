@@ -19,7 +19,7 @@
     current = localStorage.getItem("peer") || "https://peer.wallie.io/gun";
   let relaylist = [
     "https://peer.wallie.io/gun",
-    "https://plankton-app-6qfp3.ondigitalocean.app/",
+    "https://plankton-app-6qfp3.ondigitalocean.app/gun",
     "https://gun-manhattan.herokuapp.com/gun",
   ];
 

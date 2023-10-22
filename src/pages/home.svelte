@@ -14,7 +14,7 @@
     SkeletonBlock,
     BlockFooter,
   } from "framework7-svelte";
-  import { db, loggedin } from "../js/gun";
+  import { db, loggedin, user } from "../js/gun";
   import axios from "axios";
   import Card from "../components/card.svelte";
   import { v4 } from "uuid";
@@ -96,6 +96,7 @@
         .post(config.api + "/api/geo", {
           lat: coordinates.coords.latitude,
           long: coordinates.coords.longitude,
+          pub: user.is.pub,
         })
         .then(async function (response) {
           loc = response.data["address"];
