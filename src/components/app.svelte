@@ -197,6 +197,8 @@
       loading = false;
     });
   }
+
+  let useroffline;
 </script>
 
 <App {...f7params}>
