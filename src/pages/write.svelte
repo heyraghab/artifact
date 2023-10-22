@@ -36,12 +36,9 @@
       })
       .then(async function (response) {
         loc = response.data;
-        console.log(loc);
         localStorage.setItem("loc", JSON.stringify(loc));
       })
       .catch((e) => {
-        console.log("error fetching location");
-        console.log(e);
         if (localStorage.getItem("loc")) {
           loc = JSON.parse(localStorage.getItem("loc"));
         }
@@ -54,7 +51,6 @@
           time: Math.floor(new Date().getTime() / 1000),
           uid: uidd,
         };
-        console.log(data);
         data = JSON.stringify(data);
         var hash = await SEA.work(data, null, null, {
           name: "SHA-256",

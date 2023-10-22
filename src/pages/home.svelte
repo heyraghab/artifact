@@ -25,11 +25,9 @@
   let feed = [];
 
   async function fetchh(node) {
-    console.warn(`loading ${node}`);
     await db
       .get("#" + node)
       .once((a, b) => {
-        console.log(a);
         if (a) {
           delete a._;
           Object.entries(a).forEach((a) => {
@@ -83,7 +81,6 @@
         return new String(b.time).localeCompare(a.time);
       }
     });
-    console.log(feed);
   }
 
   import { Geolocation } from "@capacitor/geolocation";
@@ -100,15 +97,12 @@
         })
         .then(async function (response) {
           loc = response.data["address"];
-          console.log(loc);
           if (loc) {
             localStorage.setItem("loc", JSON.stringify(loc));
             load();
           }
         })
         .catch((e) => {
-          console.log("error fetching location");
-          console.log(e);
           if (localStorage.getItem("loc")) {
             loc = JSON.parse(localStorage.getItem("loc"));
           }

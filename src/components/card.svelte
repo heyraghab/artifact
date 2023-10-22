@@ -98,7 +98,6 @@
                     delete a._;
                     Object.entries(a).forEach((c) => {
                         try {
-                            console.log(c);
                             let data = JSON.parse(c[1]);
                             if (
                                 data.hasOwnProperty("uid") &&
@@ -123,7 +122,6 @@
                 uid: v4().split("-").join(""),
                 time: Math.floor(new Date().getTime() / 1000),
             };
-            console.log(data);
             data = JSON.stringify(data);
             var hash = await SEA.work(data, null, null, {
                 name: "SHA-256",
