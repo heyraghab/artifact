@@ -29,7 +29,7 @@
   import capacitorApp from "../js/capacitor-app";
   import routes from "../js/routes";
   import store from "../js/store";
-  import { db, user } from "../js/gun";
+  import { db, themeapp, user } from "../js/gun";
 
   let loading;
 
@@ -68,7 +68,6 @@
       if (f7.device.capacitor) {
         capacitorApp.init(f7);
       }
-      // Call F7 APIs here
     });
   });
 
@@ -133,8 +132,17 @@
     });
   }
 
+  f7ready(() => {
+    themeapp.subscribe((a) => {
+      if (localStorage.getItem("dark") == "false") {
+        f7.setDarkMode(false);
+      } else {
+        f7.setDarkMode(true);
+      }
+    });
+  });
+
   import { Capacitor } from "@capacitor/core";
-  import axios from "axios";
   async function signIn() {
     await setup().then(() => {
       loading = true;

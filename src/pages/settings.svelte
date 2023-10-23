@@ -11,9 +11,10 @@
     BlockFooter,
     f7,
     ListButton,
+    Toggle,
   } from "framework7-svelte";
   export let f7router;
-  import { db, user } from "../js/gun";
+  import { db, themeapp, user } from "../js/gun";
   import { v4 } from "uuid";
 
   let relay,
@@ -43,13 +44,39 @@
       loc = true;
     }
   });
+  let darkmode;
+  if (localStorage.getItem("dark") == "false") {
+    darkmode = false;
+  } else {
+    darkmode = true;
+  }
 </script>
 
 <Page name="settings">
   <Navbar title="Settings" />
   <Block>
-    <BlockTitle>Location Accuracy</BlockTitle>
-    {#if !loc}
+    <BlockTitle>Appearance</BlockTitle>
+    <div class="flex justify-center items-center">
+      <div>Dark Mode</div>
+      <div class="ml-auto">
+        <Toggle
+          bind:checked={darkmode}
+          onChange={() => {
+            if (darkmode == true || darkmode == "true") {
+              localStorage.setItem("dark", "false");
+              themeapp.set(false);
+            } else {
+              localStorage.setItem("dark", "true");
+              themeapp.set(true);
+            }
+          }}
+        />
+      </div>
+    </div>
+  </Block>
+  {#if !loc}
+    <Block>
+      <BlockTitle>Location Accuracy</BlockTitle>
       <div style="display: flex;justify-content: center;align-items: center;">
         enable location for better experience of local news
         <Button
@@ -64,8 +91,8 @@
           }}>enable</Button
         >
       </div>
-    {/if}
-  </Block>
+    </Block>
+  {/if}
   <Block>
     <BlockTitle>Relay</BlockTitle>
     <List>

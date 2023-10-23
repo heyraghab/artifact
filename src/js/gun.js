@@ -16,3 +16,5 @@ export let loggedin = writable(false);
 db.on("auth", (a, b, c) => {
   loggedin.set(true);
 });
+
+export const themeapp = writable(true)
