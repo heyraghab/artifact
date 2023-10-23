@@ -82,12 +82,16 @@
         <Button
           small
           onClick={() => {
-            Geolocation.requestPermissions().then((a) => {
-              if (a.location == "granted") {
-                f7.dialog.alert("we will now serve more accurate news!");
-                loc = false;
-              }
-            });
+            Geolocation.requestPermissions()
+              .then((a) => {
+                if (a.location == "granted") {
+                  f7.dialog.alert("we will now serve more accurate news!");
+                  loc = false;
+                }
+              })
+              .catch((e) => {
+                f7.dialog.alert(e.message);
+              });
           }}>enable</Button
         >
       </div>

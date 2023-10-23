@@ -6,10 +6,8 @@
     ListItem,
     Card as Cardd,
     Block,
-    Button,
     Searchbar,
     SkeletonBlock,
-    f7,
     BlockFooter,
   } from "framework7-svelte";
   import axios from "axios";
@@ -75,7 +73,7 @@
         {error}
       </BlockFooter>
     {/if}
-    {#if loading && !error}
+    {#if loading && !error && !processed}
       <Cardd style="padding: 20px;">
         <SkeletonBlock
           class="skeleton-effect-wave"
