@@ -1,9 +1,6 @@
 {
   "cwd": "C:\\Users\\LAB\\Desktop\\artifact",
-  "type": [
-    "capacitor",
-    "pwa"
-  ],
+  "type": ["capacitor", "pwa"],
   "name": "artifact",
   "framework": "svelte",
   "template": "tabs",
@@ -18,9 +15,6 @@
   "customBuild": false,
   "pkg": "com.news.artifact",
   "capacitor": {
-    "platforms": [
-      "ios",
-      "android"
-    ]
+    "platforms": ["ios", "android"]
   }
 }

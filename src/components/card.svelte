@@ -79,7 +79,7 @@
   function process() {
     comment = comment.filter((object, index) => {
       const found = comment.findIndex(
-        (obj) => obj.uid === object.uid || obj.comment == undefined
+        (obj) => obj.uid === object.uid || obj.comment == undefined,
       );
       return found === index;
     });

@@ -1,34 +1,33 @@
-
-import HomePage from '../pages/home.svelte';
-import CatalogPage from '../pages/catalog.svelte';
-import SettingsPage from '../pages/settings.svelte';
-import Write from '../pages/write.svelte';
-import History from '../pages/history.svelte';
-import NotFoundPage from '../pages/404.svelte';
+import HomePage from "../pages/home.svelte";
+import CatalogPage from "../pages/catalog.svelte";
+import SettingsPage from "../pages/settings.svelte";
+import Write from "../pages/write.svelte";
+import History from "../pages/history.svelte";
+import NotFoundPage from "../pages/404.svelte";
 
 var routes = [
   {
-    path: '/',
+    path: "/",
     component: HomePage,
   },
   {
     path: "/history",
-    component: History
+    component: History,
   },
   {
     path: "/write",
-    component: Write
+    component: Write,
   },
   {
-    path: '/catalog/',
+    path: "/catalog/",
     component: CatalogPage,
   },
   {
-    path: '/settings/',
+    path: "/settings/",
     component: SettingsPage,
   },
   {
-    path: '(.*)',
+    path: "(.*)",
     component: NotFoundPage,
   },
 ];

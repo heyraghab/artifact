@@ -18,7 +18,7 @@
   let q;
   let results = [];
   let loading;
-  let error = 'search across all posts';
+  let error = "search across all posts";
   let processed;
   async function search() {
     processed = false;

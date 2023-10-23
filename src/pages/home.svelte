@@ -139,7 +139,6 @@
       }, t);
     });
   }
-
 </script>
 
 <Page
@@ -169,7 +168,11 @@
       >
     </div>
   </Block>
-  <Popover bind:opened={popoverOpened} class="popover-menu" style="width: 50vw;">
+  <Popover
+    bind:opened={popoverOpened}
+    class="popover-menu"
+    style="width: 50vw;"
+  >
     <List>
       <ListItem
         onClick={() => {
