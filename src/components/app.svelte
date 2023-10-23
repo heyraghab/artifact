@@ -81,8 +81,11 @@
 
   async function setup() {
     return new Promise(async (resolve, reject) => {
+      if (!Capacitor.isNativePlatform()) {
+        resolve();
+      }
       await Geolocation.checkPermissions().then((a) => {
-        if (a.coarseLocation == "denied" || a.coarseLocation == "prompt") {
+        if (a.location == "denied" || a.location == "prompt") {
           //not granted
           f7ready(() => {
             f7.dialog.confirm(
@@ -91,10 +94,11 @@
               () => {
                 //granted
                 Geolocation.requestPermissions().then((a) => {
-                  if (a.coarseLocation == "granted") {
+                  if (a.location == "granted") {
                     resolve();
                   } else {
                     setloc();
+                    resolve();
                   }
                 });
               },
@@ -106,21 +110,24 @@
                   () => {
                     //granted
                     Geolocation.requestPermissions().then((a) => {
-                      if (a.coarseLocation == "granted") {
+                      if (a.location == "granted") {
                         resolve();
                       } else {
                         setloc();
+                        resolve();
                       }
                     });
                   },
                   () => {
                     setloc();
+                    resolve();
                   }
                 );
               }
             );
           });
         } else {
+          resolve();
         }
       });
     });
@@ -129,54 +136,52 @@
   import { Capacitor } from "@capacitor/core";
   import axios from "axios";
   async function signIn() {
-    if (Capacitor.isNativePlatform()) {
-      await setup();
-    }
-    loading = true;
-    user.auth(username, password, (a) => {
+    await setup().then(() => {
       loading = true;
-      let txt;
-      if (a.err) {
-        loading = false;
-        txt = a.err;
-        loginScreenOpened = true;
-      } else {
-        loading = false;
-        txt = "logged in";
-        loginScreenOpened = false;
-        localStorage.setItem("keys", JSON.stringify(a.sea));
-      }
-      f7.toast
-        .create({
-          text: txt,
-          position: "center",
-          closeTimeout: 5000,
-        })
-        .open();
-    });
-  }
-
-  async function signUp() {
-    if (Capacitor.isNativePlatform()) {
-      await setup();
-    }
-    loading = true;
-    db.user().create(username, password, (a) => {
-      if (a.err) {
+      user.auth(username, password, (a) => {
+        loading = true;
+        let txt;
+        if (a.err) {
+          loading = false;
+          txt = a.err;
+          loginScreenOpened = true;
+        } else {
+          loading = false;
+          txt = "logged in";
+          loginScreenOpened = false;
+          localStorage.setItem("keys", JSON.stringify(a.sea));
+        }
         f7.toast
           .create({
-            text: a.err,
+            text: txt,
             position: "center",
             closeTimeout: 5000,
           })
           .open();
-      } else {
-        user.auth(username, password, (a) => {
-          localStorage.setItem("keys", JSON.stringify(a.sea));
-          loginScreenOpened = false;
-        });
-      }
-      loading = false;
+      });
+    });
+  }
+
+  async function signUp() {
+    await setup().then(() => {
+      loading = true;
+      db.user().create(username, password, (a) => {
+        if (a.err) {
+          f7.toast
+            .create({
+              text: a.err,
+              position: "center",
+              closeTimeout: 5000,
+            })
+            .open();
+        } else {
+          user.auth(username, password, (a) => {
+            localStorage.setItem("keys", JSON.stringify(a.sea));
+            loginScreenOpened = false;
+          });
+        }
+        loading = false;
+      });
     });
   }
 
@@ -260,19 +265,10 @@
     </LoginScreen>
     <!-- Tabbar for switching views-tabs -->
     <Toolbar tabbar icons bottom>
-      <Link
-        tabLink="#view-home"
-        tabLinkActive
-        iconIos="f7:house_fill"
-        text=""
-      />
-      <Link tabLink="#view-catalog" iconIos="f7:search" text="" />
-      <Link
-        tabLink="#view-history"
-        iconIos="f7:person_crop_circle_fill"
-        text=""
-      />
-      <Link tabLink="#view-settings" iconIos="f7:gear" text="" />
+      <Link tabLink="#view-home" tabLinkActive iconF7="house_alt_fill" />
+      <Link tabLink="#view-catalog" iconF7="search" />
+      <Link tabLink="#view-history" iconF7="person_crop_circle_fill" />
+      <Link tabLink="#view-settings" iconF7="gear" />
     </Toolbar>
 
     <!-- Your main view/tab, should have "view-main" class. It also has "tabActive" prop -->
@@ -289,3 +285,9 @@
     <View id="view-settings" name="settings" tab url="/settings/" />
   </Views>
 </App>
+
+<style>
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+</style>

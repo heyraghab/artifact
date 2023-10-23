@@ -21,8 +21,12 @@
 
   let sel = "city";
   let sortbytime = "asc";
-  let loc;
+  let loc = {
+    state: "city",
+    country: "country",
+  };
   let feed = [];
+  let popoverOpened;
 
   async function fetchh(node) {
     console.log("loading ", node);
@@ -52,7 +56,7 @@
             } catch (error) {}
           });
         } else {
-          console.log('ok');
+          console.log("ok");
         }
       })
       .then(() => {
@@ -61,6 +65,7 @@
   }
 
   async function load() {
+    popoverOpened = false;
     console.log("starting load");
     if (loc) {
       if (sel == "city") {
@@ -134,6 +139,7 @@
       }, t);
     });
   }
+
 </script>
 
 <Page
@@ -146,8 +152,16 @@
   name="home"
 >
   <Block style="display: flex;">
-    <div style="width: {sel == 'country' ? '28' : '20'}vw;">
-      <Button fill round small popoverOpen=".popover-menu">{sel}</Button>
+    <div style="width: {sel == 'country' ? 'auto' : '20'}vw;">
+      <Button fill round small popoverOpen=".popover-menu">
+        {#if sel == "city"}
+          {loc.state}
+        {:else if sel == "country"}
+          {loc.country}
+        {:else}
+          world
+        {/if}</Button
+      >
     </div>
     <div style="width: 20vw;">
       <Button round small popoverOpen=".popover-menusorttime"
@@ -155,27 +169,24 @@
       >
     </div>
   </Block>
-  <Popover class="popover-menu" style="width: 50vw;">
+  <Popover bind:opened={popoverOpened} class="popover-menu" style="width: 50vw;">
     <List>
       <ListItem
         onClick={() => {
           sel = "city";
         }}
-        popoverClose
-        title="Your City"
+        title={loc.state}
       />
       <ListItem
         onClick={() => {
           sel = "country";
         }}
-        popoverClose
-        title="Your Country"
+        title={loc.country}
       />
       <ListItem
         onClick={() => {
           sel = "world";
         }}
-        popoverClose
         title="World"
       />
     </List>

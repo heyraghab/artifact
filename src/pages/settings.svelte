@@ -10,6 +10,7 @@
     Block,
     BlockFooter,
     f7,
+    ListButton,
   } from "framework7-svelte";
   export let f7router;
   import { db, user } from "../js/gun";
@@ -35,10 +36,36 @@
     ); // fragment locator
     return !!pattern.test(str);
   }
+  import { Geolocation } from "@capacitor/geolocation";
+  let loc;
+  Geolocation.checkPermissions().then((a) => {
+    if (a.location == "granted") {
+      loc = true;
+    }
+  });
 </script>
 
 <Page name="settings">
   <Navbar title="Settings" />
+  <Block>
+    <BlockTitle>Location Accuracy</BlockTitle>
+    {#if !loc}
+      <div style="display: flex;justify-content: center;align-items: center;">
+        enable location for better experience of local news
+        <Button
+          small
+          onClick={() => {
+            Geolocation.requestPermissions().then((a) => {
+              if (a.location == "granted") {
+                f7.dialog.alert("we will now serve more accurate news!");
+                loc = false;
+              }
+            });
+          }}>enable</Button
+        >
+      </div>
+    {/if}
+  </Block>
   <Block>
     <BlockTitle>Relay</BlockTitle>
     <List>
@@ -85,7 +112,7 @@
         fill
         round
         small
-        style="width: 40vw;"
+        style="width: 30vw;"
         onClick={() => {
           let rr = "https://peer.wallie.io/gun";
           localStorage.setItem("peer", rr);
@@ -95,7 +122,7 @@
           current = rr;
         }}
       >
-        restore defualt
+        restore
       </Button>
     </div>
     <List>

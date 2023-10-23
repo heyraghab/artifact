@@ -46,6 +46,7 @@
         localStorage.setItem("loc", JSON.stringify(loc));
       })
       .catch((e) => {
+        console.log(e);
         if (localStorage.getItem("loc")) {
           loc = JSON.parse(localStorage.getItem("loc"));
         }
@@ -62,15 +63,17 @@
         var hash = await SEA.work(data, null, null, {
           name: "SHA-256",
         });
-        db.get(`#${loc.city}`).get(hash).put(data);
-        db.get(`#${loc.area}`).get(hash).put(data);
+        console.log(loc);
+        db.get(`#${loc.state}`).get(hash).put(data);
+        db.get(`#${loc.country}`).get(hash).put(data);
         db.get(`#world`).get(hash).put(data);
         user
           .get("posts")
           .get(Math.floor(new Date().getTime() / 1000))
           .put(data);
 
-        axios.post(config.api + "/api/submit", {
+        await axios.get(config.api + "/api/cache?pub=" + user.is.pub);
+        await axios.post(config.api + "/api/submit", {
           heading: heading,
           content: desc,
           pub: user.is.pub || "",
