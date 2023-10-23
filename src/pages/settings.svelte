@@ -38,10 +38,10 @@
     return !!pattern.test(str);
   }
   import { Geolocation } from "@capacitor/geolocation";
-  let loc;
+  let showloc = true;
   Geolocation.checkPermissions().then((a) => {
     if (a.location == "granted") {
-      loc = true;
+      showloc = false;
     }
   });
   let darkmode;
@@ -74,7 +74,7 @@
       </div>
     </div>
   </Block>
-  {#if !loc}
+  {#if showloc}
     <Block>
       <BlockTitle>Location Accuracy</BlockTitle>
       <div style="display: flex;justify-content: center;align-items: center;">
@@ -86,7 +86,7 @@
               .then((a) => {
                 if (a.location == "granted") {
                   f7.dialog.alert("we will now serve more accurate news!");
-                  loc = false;
+                  showloc = false;
                 }
               })
               .catch((e) => {

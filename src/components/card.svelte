@@ -16,7 +16,10 @@
     Messagebar,
     Button,
     BlockFooter,
+    PhotoBrowser,
+    f7ready,
   } from "framework7-svelte";
+  import sanitizeHtml from "sanitize-html";
   import { db, user } from "../js/gun";
   export let f;
 
@@ -69,6 +72,7 @@
     vote = [...vote, data];
   }
   import { v4 } from "uuid";
+  import News from "./news.svelte";
 
   let comment = [];
   let messageText;
@@ -132,6 +136,24 @@
     }
   }
   async function upvotecomment() {}
+
+  let popup;
+  let images = [];
+  let thumbs = [];
+  Object.values(f.images).forEach((e) => {
+    images.push({ url: e.url });
+    thumbs.push(e.url + "-/preview/500x500/");
+  });
+
+  f7ready(() => {
+    popup = f7.photoBrowser.create({
+      photos: images,
+      thumbs: thumbs,
+      closeByBackdropClick: true,
+    });
+  });
+
+  let newsopened = false;
 </script>
 
 <Popup
@@ -207,13 +229,47 @@
     </Messagebar>
   </Page>
 </Popup>
+
+<News {images} {thumbs} {popup} {f} bind:opened={newsopened} />
+
+<!--
+  CARD COMPONENT
+-->
+
 <Card outline>
   <CardHeader style="padding-bottom: 0px;">
     {f.heading}
   </CardHeader>
-  <CardContent style="font-size: 13px;padding-top: 10px;">
-    {f.desc || f.content}
+  <CardContent
+    class="line-clamp-2 mb-1"
+    style="font-size: 13px;padding-top: 10px;"
+  >
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div
+      on:click={() => {
+        newsopened = true;
+      }}
+    >
+      {@html sanitizeHtml(f.desc || f.content).replace(/href\=\"(.*)\"/)}
+    </div>
   </CardContent>
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    class="flex gap-2 overflow-x-scroll m-2"
+    on:click={() => {
+      popup.open();
+    }}
+  >
+    {#each thumbs as img (v4())}
+      <img
+        class="h-28 w-28 object-cover rounded-md aspect-square"
+        src={img}
+        alt=""
+      />
+    {/each}
+  </div>
   <CardFooter style="font-size: 12px;padding-top: 0px;">
     <Button
       disabled={voted}
@@ -228,8 +284,8 @@
       <Icon f7="arrow_up" size="18" />
       {vote.length}
     </Button>
-    <Button onClick={loadcomments}>
-      <Icon f7="chat_bubble" size="18" />
+    <Button rounded onClick={loadcomments}>
+      <Icon f7="chat_bubble" size="19" />
     </Button>
   </CardFooter>
 </Card>

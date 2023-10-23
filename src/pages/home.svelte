@@ -49,6 +49,7 @@
                     time: data.time,
                     desc: data.desc,
                     uid: data.uid,
+                    images: data.images || {},
                   },
                   ...feed,
                 ];
@@ -139,6 +140,7 @@
       }, t);
     });
   }
+
 </script>
 
 <Page
