@@ -181,7 +181,10 @@
             accept="image/*"
             on:change={handleImageChange}
           />
-          <label class="flex gap-2 justify-center items-center" for="filepicker">
+          <label
+            class="flex gap-2 justify-center items-center"
+            for="filepicker"
+          >
             <Icon f7="photo" color="blue" size="20" />
             <div>Add Images</div>
           </label>
