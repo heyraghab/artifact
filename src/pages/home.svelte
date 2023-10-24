@@ -43,6 +43,9 @@
                 data.hasOwnProperty("time") &&
                 data.hasOwnProperty("heading")
               ) {
+                // if (!_.has(data, "images")) {
+                //   data.images = {};
+                // }
                 feed = [
                   {
                     heading: data.heading,

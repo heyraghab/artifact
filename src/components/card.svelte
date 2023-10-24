@@ -21,6 +21,7 @@
   } from "framework7-svelte";
   import sanitizeHtml from "sanitize-html";
   import { db, user } from "../js/gun";
+  import _ from "underscore";
   export let f;
 
   let vote = [];
@@ -140,6 +141,11 @@
   let popup;
   let images = [];
   let thumbs = [];
+  // if (!_.has(f, "images")) {
+  if (f["images"].length == 0) {
+    f["images"] = [];
+  }
+  // }
   Object.values(f.images).forEach((e) => {
     images.push({ url: e.url });
     thumbs.push(e.url + "-/preview/500x500/");
@@ -257,14 +263,14 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="flex gap-2 overflow-x-scroll m-2"
+    class="flex overflow-x-scroll m-2"
     on:click={() => {
       popup.open();
     }}
   >
     {#each thumbs as img (v4())}
       <img
-        class="h-28 w-28 object-cover rounded-md aspect-square"
+        class="h-28 w-28 ml-2 object-cover rounded-md aspect-square"
         src={img}
         alt=""
       />

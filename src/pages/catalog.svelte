@@ -31,19 +31,22 @@
         let data = res.data;
         console.log(data);
         data["data"].forEach((e) => {
-          results = [e, ...results];
+          results = [
+            {
+              heading: e.heading,
+              time: e.createdAt,
+              desc: e.content,
+              uid: e.uid,
+              images: JSON.parse(e.images) || {},
+            },
+            ...results,
+          ];
         });
         loading = false;
       })
       .catch((a) => {
         if (a.code == "ERR_BAD_REQUEST") {
           error = a.response.data.m;
-          // f7.toast
-          //   .create({
-          //     text: error,
-          //     closeTimeout: 2000,
-          //   })
-          //   .open();
         }
       });
     processed = true;
@@ -67,13 +70,11 @@
       <div class="truncate opacity-80">
         no result for '{q}'
       </div>
-    {/if}
-    {#if error}
+    {:else if error}
       <BlockFooter>
         {error}
       </BlockFooter>
-    {/if}
-    {#if loading && !error && !processed}
+    {:else if loading && !processed}
       <Cardd style="padding: 20px;">
         <SkeletonBlock
           class="skeleton-effect-wave"
@@ -96,8 +97,7 @@
           style="width: 90%; height: 20px; border-radius: 20px"
         />
       </Cardd>
-    {/if}
-    {#if !loading && processed}
+    {:else if !loading && processed}
       {#each results as f (v4())}
         <Card {f} />
       {/each}

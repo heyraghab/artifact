@@ -92,13 +92,22 @@
           .put(data);
 
         await axios.get(config.api + "/api/cache?pub=" + user.is.pub);
-        await axios.post(config.api + "/api/submit", {
-          heading: heading,
-          content: desc,
-          pub: user.is.pub || "",
-          uid: uidd,
-          images: await array2object(selectedImage),
-        });
+        await axios
+          .post(config.api + "/api/submit", {
+            heading: heading,
+            content: desc,
+            pub: user.is.pub || "",
+            uid: uidd,
+            images: await array2object(selectedImage),
+          })
+          .catch((e) => {
+            processing = false;
+            f7.toast
+              .create({
+                text: e.message,
+              })
+              .open();
+          });
         processing = false;
         f7router.back();
       });
@@ -181,27 +190,24 @@
             accept="image/*"
             on:change={handleImageChange}
           />
-          <label
-            class="flex gap-2 justify-center items-center"
-            for="filepicker"
-          >
+          <label class="flex justify-center items-center" for="filepicker">
             <Icon f7="photo" color="blue" size="20" />
-            <div>Add Images</div>
+            <div class="ml-2">Add Media</div>
           </label>
-          <div class="flex gap-2 flex-wrap">
-            {#each selectedImage as img (v4())}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-              <img
-                on:click={() => {
-                  removeimg(img.url);
-                }}
-                class="h-28 w-28 object-cover rounded-md aspect-square"
-                src={img.url + "-/preview/150x150/"}
-                alt=""
-              />
-            {/each}
-          </div>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          {#each selectedImage as img (v4())}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+            <img
+              on:click={() => {
+                removeimg(img.url);
+              }}
+              class="h-28 w-28 object-cover rounded-md aspect-square"
+              src={img.url + "-/preview/150x150/"}
+              alt=""
+            />
+          {/each}
         </div>
       </div>
     </ListItem>
