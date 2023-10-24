@@ -16,17 +16,31 @@
     Messagebar,
     Button,
     BlockFooter,
-    PhotoBrowser,
     f7ready,
+    Preloader,
   } from "framework7-svelte";
   import sanitizeHtml from "sanitize-html";
   import { db, user } from "../js/gun";
   import _ from "underscore";
   export let f;
+  import { v4 } from "uuid";
+  import News from "./news.svelte";
 
+  let comment = [];
+  let messageText;
+  let commentsopened = false;
+  let comments_graph = db.get("comments").get(`#${f.uid}`);
   let vote = [];
   let voted = false;
   let userpub = user.is.pub;
+  let upvotingprogress = false;
+
+  function stopupvotingprogress() {
+    upvotingprogress = false;
+  }
+
+  $: vote, stopupvotingprogress();
+
   db.get("upvotes")
     .get(`#${f.uid}`)
     .once((a) => {
@@ -45,6 +59,7 @@
     });
 
   async function upvote() {
+    upvotingprogress = true;
     let data = {
       pub: user.is.pub,
       vote: "up",
@@ -67,19 +82,11 @@
             })
             .open();
         } else {
+          voted = true;
+          vote = [...vote, data];
         }
       });
-    voted = true;
-    vote = [...vote, data];
   }
-  import { v4 } from "uuid";
-  import News from "./news.svelte";
-
-  let comment = [];
-  let messageText;
-  let commentsopened = false;
-
-  let comments_graph = db.get("comments").get(`#${f.uid}`);
 
   function process() {
     comment = comment.filter((object, index) => {
@@ -93,6 +100,14 @@
     });
   }
 
+  let loadcommentsplace = {};
+
+  function addreply(key, value) {
+    console.log("triggered");
+    comment[key]["replies"] = [...comment[key]["replies"], value];
+    console.log(comment);
+  }
+
   async function loadcomments() {
     commentsopened = true;
     try {
@@ -100,40 +115,88 @@
         .get("comments")
         .get(`#${f.uid}`)
         .once((a) => {
-          delete a._;
-          Object.entries(a).forEach((c) => {
-            try {
-              let data = JSON.parse(c[1]);
-              if (
-                data.hasOwnProperty("uid") &&
-                data.hasOwnProperty("time") &&
-                data.hasOwnProperty("comment")
-              ) {
-                comment = [...comment, data];
-              }
-            } finally {
-              process();
-            }
-          });
+          if (a) {
+            delete a._;
+            Object.entries(a).forEach((c) => {
+              try {
+                let data = JSON.parse(c[1]);
+                console.log(data);
+                if (
+                  data.hasOwnProperty("uid") &&
+                  data.hasOwnProperty("time") &&
+                  data.hasOwnProperty("comment") &&
+                  data.hasOwnProperty("pub")
+                ) {
+                  let usergraph = db.user(data.pub);
+                  usergraph.get("alias").once((n) => {
+                    if (n) {
+                      data["name"] = n;
+                      data["replies"] = [];
+                      loadcommentsplace[data.uid] = false;
+                      usergraph
+                        .get("comments")
+                        .get(data.uid)
+                        .get("verify")
+                        .once((a) => {
+                          if (a == data.comment) {
+                            if (/@(.*) /.test(data.comment)) {
+                              Object.entries(comment).forEach((e) => {
+                                let key = e[0];
+                                let value = e[1];
+
+                                if (value.uid == data["replyto"]) {
+                                  addreply(key, data);
+                                }
+                              });
+                            } else {
+                              comment = [...comment, data];
+                            }
+                          }
+                        });
+                    }
+                  });
+                }
+              } catch (e) {}
+            });
+          }
         });
     } catch (error) {
       comment = [];
     }
   }
+
+  $: comment, process();
+
+  let replyto = "";
+  let replytoname = "";
+
   async function sendMessage() {
-    if (messageText) {
-      let data = {
-        comment: messageText,
-        uid: v4().split("-").join(""),
-        time: Math.floor(new Date().getTime() / 1000),
-      };
-      data = JSON.stringify(data);
-      var hash = await SEA.work(data, null, null, {
-        name: "SHA-256",
-      });
-      await comments_graph.get(hash).put(data);
-      messageText = "";
-      loadcomments();
+    try {
+      if (messageText) {
+        let uuis = v4().split("-").join("");
+        let data = {
+          comment: messageText,
+          pub: user.is.pub,
+          uid: uuis,
+          time: Math.floor(new Date().getTime() / 1000),
+        };
+        if (/@(.*) /.test(messageText)) {
+          data["replyto"] = replyto;
+        }
+        console.log(data);
+        data = JSON.stringify(data);
+        var hash = await SEA.work(data, null, null, {
+          name: "SHA-256",
+        });
+        await user.get("comments").get(uuis).get("verify").put(messageText);
+        await comments_graph.get(hash).put(data);
+        messageText = "";
+        replyto = "";
+        replytoname = "";
+        loadcomments();
+      }
+    } catch (error) {
+      console.log(error);
     }
   }
   async function upvotecomment() {}
@@ -167,6 +230,8 @@
   opened={commentsopened}
   onPopupClosed={() => {
     commentsopened = false;
+    comment = [];
+    loadcommentsplace = {};
   }}
 >
   <Page>
@@ -175,54 +240,108 @@
         <Link popupClose>Close</Link>
       </NavRight>
     </Navbar>
-    <Block>
-      {#if comment.length > 0}
-        {#each comment as f (v4())}
-          <Card style="padding: 10px;">
-            <div style="display: flex;">
-              <Button
-                on:click={() => {
-                  upvotecomment(f.uid);
-                }}
-                style="margin: 10px;"
-              >
-                <Icon f7="person" color="blue" size="15" />
-              </Button>
-              <div
-                style="display: flex;justify-items: center;align-items: center;"
-              >
-                {f.comment}
+    {#if comment.length > 0}
+      {#each comment as f (v4())}
+        <Card>
+          <div class="flex">
+            <Button
+              disabled={true}
+              on:click={() => {
+                upvotecomment(f.uid);
+              }}
+              style="margin: 10px;"
+            >
+              <img
+                class="aspect-square h-4 w-4 object-cover"
+                src={`https://api.dicebear.com/7.x/identicon/svg?seed=${f.pub}&backgroundColor=transparent`}
+                alt=""
+              />
+            </Button>
+            <CardContent>
+              <div class="flex flex-col">
+                <div>
+                  @{f.name}
+                </div>
+                <div>
+                  {f.comment}
+                </div>
               </div>
+            </CardContent>
+          </div>
+
+          <CardFooter style="margin-left: 23px;">
+            <Link
+              color="blue"
+              onClick={() => {
+                messageText = `@${f.name} `;
+                replyto = f.uid;
+                replytoname = f.name;
+              }}
+            >
+              reply
+            </Link>
+          </CardFooter>
+          {#if f.replies.length !== 0}
+            <div class="ml-4 flex flex-col">
+              {#if loadcommentsplace[f.uid] == true}
+                {#each f.replies as f (v4())}
+                  <Card outline>
+                    <CardFooter>
+                      @{f.name}: {f.comment.replace(/@(.*) /, "")}
+                    </CardFooter>
+                  </Card>
+                {/each}
+              {:else}
+                <Card outline>
+                  <CardFooter>
+                    @{f.replies[0].name}: {f.replies[0].comment.replace(
+                      /@(.*) /,
+                      "",
+                    )}
+                  </CardFooter>
+                </Card>
+              {/if}
             </div>
-          </Card>
-        {/each}
-      {:else if comment == 0}
-        <BlockFooter>Be The First One To Comment</BlockFooter>
-      {:else}
-        <Card style="padding: 20px;">
-          <SkeletonBlock
-            class="skeleton-effect-wave"
-            style="width: 100%; height: 20px; border-radius: 20px"
-          />
-          <br />
-          <SkeletonBlock
-            class="skeleton-effect-wave"
-            style="width: 70%; height: 20px; border-radius: 20px"
-          />
+          {/if}
+          {#if f.replies.length > 1 && loadcommentsplace[f.uid] == false}
+            <div style="margin-left: 23px;" class="mb-2">
+              <Link
+                onClick={() => {
+                  loadcommentsplace[f.uid] = true;
+                }}
+              >
+                load replies
+              </Link>
+            </div>
+          {/if}
         </Card>
-        <Card style="padding: 20px;">
-          <SkeletonBlock
-            class="skeleton-effect-wave"
-            style="width: 80%; height: 20px; border-radius: 20px"
-          />
-          <br />
-          <SkeletonBlock
-            class="skeleton-effect-wave"
-            style="width: 90%; height: 20px; border-radius: 20px"
-          />
-        </Card>
-      {/if}
-    </Block>
+      {/each}
+    {:else if comment == 0}
+      <BlockFooter>Be The First One To Comment</BlockFooter>
+    {:else}
+      <Card style="padding: 20px;">
+        <SkeletonBlock
+          class="skeleton-effect-wave"
+          style="width: 100%; height: 20px; border-radius: 20px"
+        />
+        <br />
+        <SkeletonBlock
+          class="skeleton-effect-wave"
+          style="width: 70%; height: 20px; border-radius: 20px"
+        />
+      </Card>
+      <Card style="padding: 20px;">
+        <SkeletonBlock
+          class="skeleton-effect-wave"
+          style="width: 80%; height: 20px; border-radius: 20px"
+        />
+        <br />
+        <SkeletonBlock
+          class="skeleton-effect-wave"
+          style="width: 90%; height: 20px; border-radius: 20px"
+        />
+      </Card>
+    {/if}
 
     <Messagebar
       placeholder="Type a comment"
@@ -287,7 +406,13 @@
         }
       }}
     >
-      <Icon f7="arrow_up" size="18" />
+      {#if upvotingprogress}
+        <span class="animate-spin mr-0.5">
+          <Preloader size="15" color="blue" />
+        </span>
+      {:else}
+        <Icon f7="arrow_up" size="18" />
+      {/if}
       {vote.length}
     </Button>
     <Button rounded onClick={loadcomments}>

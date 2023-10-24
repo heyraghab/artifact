@@ -20,19 +20,23 @@
   import { v4 } from "uuid";
 
   let sel = "city";
+  let loading = false;
   let sortbytime = "asc";
+
+  /**
+   * CHANGE IT BACK
+   */
+
   let loc = {
-    state: "city",
+    state: "Delhi",
     country: "country",
   };
   let feed = [];
   let popoverOpened;
 
   async function fetchh(node) {
-    console.log("loading ", node);
-    await db
-      .get("#" + node)
-      .once((a, b) => {
+    try {
+      await db.get("#" + node).once(async (a, b) => {
         if (a) {
           delete a._;
           Object.entries(a).forEach((a) => {
@@ -60,25 +64,25 @@
             } catch (error) {}
           });
         } else {
-          console.log("ok");
+          console.log("returned empty news list");
         }
-      })
-      .then(() => {
-        process();
       });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  async function load() {
+  $: feed, process();
+
+  function load() {
     popoverOpened = false;
-    console.log("starting load");
-    if (loc) {
-      if (sel == "city") {
-        fetchh(loc.state);
-      } else if (sel == "country") {
-        fetchh(loc.country);
-      } else {
-        fetchh("world");
-      }
+    console.log("starting load", loc);
+    if (sel == "city") {
+      fetchh(loc.state);
+    } else if (sel == "country") {
+      fetchh(loc.country);
+    } else {
+      fetchh("world");
     }
   }
 
@@ -105,34 +109,38 @@
       };
 
       try {
+        // Geolocation.checkPermissions().then(async (a) => {
+        //   if (a.location == "granted") {
         const coordinates = await Geolocation.getCurrentPosition();
         if (coordinates) {
           options["lat"] = coordinates.coords.latitude;
           options["long"] = coordinates.coords.longitude;
         }
-      } catch (error) {}
+        //   }
+        // });
 
-      await axios
-        .post(config.api + "/api/geo", options)
-        .then(async function (response) {
-          console.log(response.data);
-          loc = response.data;
-          fetchh(loc.state);
-          if (loc) {
-            localStorage.setItem("loc", JSON.stringify(loc));
+        loading = true;
+        console.log(options);
+        await axios
+          .post(config.api + "/api/geo", options)
+          .then(async function (response) {
+            loc = response.data;
+            if (loc) {
+              localStorage.setItem("loc", JSON.stringify(loc));
+            }
             load();
-          }
-        })
-        .catch((e) => {
-          if (localStorage.getItem("loc")) {
-            loc = JSON.parse(localStorage.getItem("loc"));
-          }
-          load();
-        });
+          })
+          .catch((e) => {
+            if (localStorage.getItem("loc")) {
+              loc = JSON.parse(localStorage.getItem("loc"));
+            }
+            load();
+          });
+        loading = false;
+      } catch (error) {}
     }
   });
 
-  $: sel, load();
   $: sortbytime, process();
   // $: feed, process();
 
@@ -181,18 +189,21 @@
       <ListItem
         onClick={() => {
           sel = "city";
+          load();
         }}
         title={loc.state}
       />
       <ListItem
         onClick={() => {
           sel = "country";
+          load();
         }}
         title={loc.country}
       />
       <ListItem
         onClick={() => {
           sel = "world";
+          load();
         }}
         title="World"
       />
@@ -226,35 +237,32 @@
   >
     <Icon f7="pencil" size="25" />
   </Fab>
-  {#if feed.length == 0 && $loggedin}
-    {#await sleep(3000)}
-      <Cardd style="padding: 20px;">
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 100%; height: 20px; border-radius: 20px"
-        />
-        <br />
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 70%; height: 20px; border-radius: 20px"
-        />
-      </Cardd>
-      <Cardd style="padding: 20px;">
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 80%; height: 20px; border-radius: 20px"
-        />
-        <br />
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 90%; height: 20px; border-radius: 20px"
-        />
-      </Cardd>
-    {:then a}
-      <BlockFooter>BIG NEWS! WE'RE OUT OF IT!!!</BlockFooter>
-    {/await}
+  {#if loading}
+    <Cardd style="padding: 20px;">
+      <SkeletonBlock
+        class="skeleton-effect-wave"
+        style="width: 100%; height: 20px; border-radius: 20px"
+      />
+      <br />
+      <SkeletonBlock
+        class="skeleton-effect-wave"
+        style="width: 70%; height: 20px; border-radius: 20px"
+      />
+    </Cardd>
+    <Cardd style="padding: 20px;">
+      <SkeletonBlock
+        class="skeleton-effect-wave"
+        style="width: 80%; height: 20px; border-radius: 20px"
+      />
+      <br />
+      <SkeletonBlock
+        class="skeleton-effect-wave"
+        style="width: 90%; height: 20px; border-radius: 20px"
+      />
+    </Cardd>
+  {:else}
+    {#each feed as f (v4())}
+      <Card {f} />
+    {/each}
   {/if}
-  {#each feed as f (v4())}
-    <Card {f} />
-  {/each}
 </Page>
