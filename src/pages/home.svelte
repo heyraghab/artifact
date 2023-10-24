@@ -28,7 +28,7 @@
    */
 
   let loc = {
-    state: "Delhi",
+    state: "city",
     country: "country",
   };
   let feed = [];

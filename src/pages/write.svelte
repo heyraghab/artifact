@@ -111,6 +111,7 @@
         processing = false;
         f7router.back();
       });
+    processing = false;
   }
   let disabledd;
   function prcess() {
