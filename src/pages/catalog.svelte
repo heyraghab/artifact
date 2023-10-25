@@ -26,7 +26,7 @@
       .then((res) => {
         results = [];
         let data = res.data;
-        console.log(data);
+
         data["data"].forEach((e) => {
           results = [
             {

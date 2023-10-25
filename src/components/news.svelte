@@ -23,30 +23,27 @@
   import { Share } from "@capacitor/share";
   import { Browser } from "@capacitor/browser";
   window.open = async (url) => {
-    console.log("ok");
-    await Browser.open({ url: url }).catch((e) => {
-      console.log(e);
-    });
+    await Browser.open({ url: url }).catch((e) => {});
   };
 
   // import { Directory, Filesystem } from "@capacitor/filesystem";
   // async function downloadAll() {
   //   Filesystem.requestPermissions().then((a) => {
-  //     console.log(a);
+  //
   //   });
   //   if (images.length !== 0) {
   //     images.forEach(async (img) => {
   //       img = img.url;
-  //       console.log(img);
+  //
   //       await Filesystem.downloadFile({
   //         url: img,
   //         path: Directory.Data,
   //         progress: ({ a }, b, c) => {
-  //           console.log(a);
+  //
   //         },
   //         recursive: true,
   //       }).then((a) => {
-  //         console.log(a);
+  //
   //       });
   //     });
   //   }

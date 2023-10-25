@@ -1,10 +1,5 @@
 <script>
-  import {
-    Block,
-    BlockHeader,
-    Navbar,
-    Page,
-  } from "framework7-svelte";
+  import { Block, BlockHeader, Navbar, Page } from "framework7-svelte";
   import { db, user } from "../js/gun";
   import Card from "../components/card.svelte";
   import { v4 } from "uuid";
@@ -32,7 +27,7 @@
   $: posts, process();
 </script>
 
-<Navbar title="Posts" backLink=' ' />
+<Navbar title="Posts" backLink=" " />
 <Page ptr ptrMousewheel={true} onPtrRefresh={load} name="Posts">
   <Block>
     {#if posts.length == 0}

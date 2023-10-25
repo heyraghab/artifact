@@ -60,7 +60,6 @@
         localStorage.setItem("loc", JSON.stringify(loc));
       })
       .catch((e) => {
-        console.log(e);
         if (localStorage.getItem("loc")) {
           loc = JSON.parse(localStorage.getItem("loc"));
         }
@@ -78,7 +77,7 @@
         var hash = await SEA.work(data, null, null, {
           name: "SHA-256",
         });
-        console.log(loc);
+
         db.get(`#${loc.state}`).get(hash).put(data);
         db.get(`#${loc.country}`).get(hash).put(data);
         db.get(`#world`).get(hash).put(data);
@@ -101,7 +100,7 @@
             f7.toast
               .create({
                 text: e.message,
-                closeTimeout: 2000
+                closeTimeout: 2000,
               })
               .open();
           });
@@ -143,7 +142,7 @@
   //   )
   //   .then((res) => {
   //     let data = res.data;
-  //     console.log(data.articles);
+  //
   //     if (confirm()) {
   //       let e = data.articles[(Math.random() * 100).toFixed(0)];
   //       if (e.description && e.url) {

@@ -104,9 +104,7 @@
   let loadcommentsplace = {};
 
   function addreply(key, value) {
-    console.log("triggered");
     comment[key]["replies"] = [...comment[key]["replies"], value];
-    console.log(comment);
   }
 
   async function loadcomments() {
@@ -123,7 +121,7 @@
             Object.entries(a).forEach((c) => {
               try {
                 let data = JSON.parse(c[1]);
-                console.log(data);
+
                 if (
                   data.hasOwnProperty("uid") &&
                   data.hasOwnProperty("time") &&
@@ -191,7 +189,7 @@
         if (replyto !== "") {
           data["replyto"] = replyto;
         }
-        console.log(data);
+
         data = JSON.stringify(data);
         var hash = await SEA.work(data, null, null, {
           name: "SHA-256",
@@ -203,9 +201,7 @@
         replytoname = "";
         loadcomments();
       }
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   }
   async function upvotecomment() {}
 
@@ -247,7 +243,6 @@
   on:inview_enter={(event) => {
     if (!justrender) {
       timeout_ = setTimeout(async () => {
-        console.log("seen");
         user.get("seenPostCopy").get(f.hash).put(f.channel);
         user
           .get("seen")
@@ -258,7 +253,6 @@
   }}
   on:inview_leave={(event) => {
     if (!justrender) {
-      console.log("cleared");
       clearInterval(timeout_);
     }
   }}

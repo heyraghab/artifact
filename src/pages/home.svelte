@@ -85,7 +85,6 @@
             } catch (error) {}
           });
         } else {
-          console.log("returned empty news list");
         }
       });
     } catch (error) {
@@ -97,7 +96,7 @@
 
   function load() {
     popoverOpened = false;
-    console.log("starting load", loc);
+
     if (sel == "city") {
       fetchh(loc.state);
     } else if (sel == "country") {
@@ -138,7 +137,7 @@
           }
 
           loading = true;
-          console.log(options);
+
           await axios
             .post(config.api + "/api/geo", options)
             .then(async function (response) {
@@ -149,8 +148,6 @@
               load();
             })
             .catch(async (e) => {
-              console.log("ERROR FETCHING LOCATION");
-              console.log(e.message);
               if (localStorage.getItem("loc")) {
                 loc = JSON.parse(localStorage.getItem("loc"));
               } else {
@@ -169,9 +166,7 @@
             });
           loading = false;
         });
-      } catch (error) {
-        console.log(error);
-      }
+      } catch (error) {}
     }
   });
 
@@ -193,8 +188,6 @@
     if (!allowInfinite) return;
     allowInfinite = false;
     showPreloader = false;
-
-    console.log("okok");
 
     allowInfinite = true;
   }
