@@ -77,9 +77,6 @@ dependencies:
   material-icons:
     specifier: ^1.13.12
     version: 1.13.12
-  observe-element-in-viewport:
-    specifier: ^0.0.15
-    version: 0.0.15
   sanitize-html:
     specifier: ^2.11.0
     version: 2.11.0
@@ -5615,10 +5612,6 @@ packages:
       has-symbols: 1.0.3
       object-keys: 1.1.1
     dev: true
-
-  /observe-element-in-viewport@0.0.15:
-    resolution: {integrity: sha512-BaJGtCHp8XXxe8zFOnsbv93f4SRLb0W5P3okGJkLLKC9IM9aXvpKF4C8lFxivcS5eROlNkhOCnUOSk4tUnJnKQ==}
-    dev: false
 
   /on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}

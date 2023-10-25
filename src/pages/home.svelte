@@ -148,15 +148,30 @@
               }
               load();
             })
-            .catch((e) => {
+            .catch(async (e) => {
+              console.log("ERROR FETCHING LOCATION");
+              console.log(e.message);
               if (localStorage.getItem("loc")) {
                 loc = JSON.parse(localStorage.getItem("loc"));
+              } else {
+                await axios.get("http://ip-api.com/json/").then((r) => {
+                  let data = r.data;
+                  if (_.has(data, "city") && _.has(data, "country")) {
+                    let datapro = {
+                      state: data.city,
+                      country: data.country,
+                    };
+                    loc = datapro;
+                  }
+                });
               }
               load();
             });
           loading = false;
         });
-      } catch (error) {}
+      } catch (error) {
+        console.log(error);
+      }
     }
   });
 

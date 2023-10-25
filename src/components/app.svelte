@@ -1,6 +1,6 @@
 <script>
-  // import eruda from "eruda";
-  // eruda.init();
+  import eruda from "eruda";
+  eruda.init();
   // locking orientation
   window.screen.orientation.lock("portrait");
 

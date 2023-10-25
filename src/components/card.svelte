@@ -111,6 +111,8 @@
 
   async function loadcomments() {
     commentsopened = true;
+    loadcommentsplace = {};
+    comment = [];
     try {
       await db
         .get("comments")
@@ -140,7 +142,12 @@
                         .get("verify")
                         .once((a) => {
                           if (a == data.comment) {
-                            if (/@(.*) /.test(data.comment)) {
+                            if (_.has(data, "replyto")) {
+                              ///reply \((.*)\)\: /.test(data.comment)) {
+                              data.comment = data.comment.replace(
+                                /reply \((.*)\)\: /,
+                                "",
+                              );
                               Object.entries(comment).forEach((e) => {
                                 let key = e[0];
                                 let value = e[1];
@@ -181,7 +188,7 @@
           uid: uuis,
           time: Math.floor(new Date().getTime() / 1000),
         };
-        if (/@(.*) /.test(messageText)) {
+        if (replyto !== "") {
           data["replyto"] = replyto;
         }
         console.log(data);
@@ -299,7 +306,7 @@
               <Link
                 color="blue"
                 onClick={() => {
-                  messageText = `@${f.name} `;
+                  messageText = `reply (${f.comment}): `;
                   replyto = f.uid;
                   replytoname = f.name;
                 }}
@@ -319,8 +326,8 @@
                             src={`https://api.dicebear.com/7.x/identicon/svg?seed=${f.pub}&backgroundColor=transparent`}
                             alt=""
                           />
-                          <div>
-                            {f.comment.replace(/@(.*) /, "")}
+                          <div class="ml-2">
+                            {f.comment.replace(/reply \((.*)\)\: /, "")}
                           </div>
                         </div>
                       </CardFooter>
@@ -335,8 +342,11 @@
                           src={`https://api.dicebear.com/7.x/identicon/svg?seed=${f.replies[0].pub}&backgroundColor=transparent`}
                           alt=""
                         />
-                        <div>
-                          {f.replies[0].comment.replace(/@(.*) /, "")}
+                        <div class="ml-2">
+                          {f.replies[0].comment.replace(
+                            /reply \((.*)\)\: /,
+                            "",
+                          )}
                         </div>
                       </div>
                     </CardFooter>
