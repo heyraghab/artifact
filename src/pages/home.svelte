@@ -2,16 +2,13 @@
   export let f7router;
   import {
     Page,
-    Link,
     Block,
-    Card as Cardd,
     List,
     ListItem,
     Button,
     Popover,
     Icon,
     Fab,
-    SkeletonBlock,
     BlockFooter,
   } from "framework7-svelte";
   import { db, loggedin, user } from "../js/gun";
@@ -19,6 +16,9 @@
   import Card from "../components/card.svelte";
   import { v4 } from "uuid";
   import _ from "underscore";
+  import { Geolocation } from "@capacitor/geolocation";
+  import { config } from "../js/init";
+  import Skeleton from "../components/skeleton.svelte";
 
   let sel = "city";
   let loading = false;
@@ -38,6 +38,7 @@
   import { sha256 } from "hash.js";
   let seen = {};
   user.get("seen").once((a) => {
+    if (!a) return;
     Object.entries(a).forEach(async (a) => {
       if (a[1] == true) {
         seen[a[0]] = a[1];
@@ -50,7 +51,9 @@
       await db.get("#" + node).once(async (a, bb) => {
         if (a) {
           delete a._;
-          Object.entries(a).forEach(async (a) => {
+
+          a = Object.entries(a);
+          a.forEach(async (a) => {
             try {
               let data = new Object(JSON.parse(a[1]));
               if (
@@ -68,7 +71,7 @@
                   uid: data.uid,
                   images: data.images || {},
                   hash: a[0],
-                  channel: bb
+                  channel: bb,
                 };
                 if (
                   !_.has(
@@ -86,7 +89,7 @@
         }
       });
     } catch (error) {
-      console.log(error);
+      console.warn(error);
     }
   }
 
@@ -120,8 +123,6 @@
     });
   }
 
-  import { Geolocation } from "@capacitor/geolocation";
-  import { config } from "../js/init";
   loggedin.subscribe(async (a) => {
     if (a == true) {
       let options = {
@@ -129,34 +130,32 @@
       };
 
       try {
-        // Geolocation.checkPermissions().then(async (a) => {
-        //   if (a.location == "granted") {
-        const coordinates = await Geolocation.getCurrentPosition();
-        if (coordinates) {
-          options["lat"] = coordinates.coords.latitude;
-          options["long"] = coordinates.coords.longitude;
-        }
-        //   }
-        // });
+        Geolocation.checkPermissions().then(async (a) => {
+          if (a.location == "granted") {
+            const coordinates = await Geolocation.getCurrentPosition();
+            options["lat"] = coordinates.coords.latitude;
+            options["long"] = coordinates.coords.longitude;
+          }
 
-        loading = true;
-        console.log(options);
-        await axios
-          .post(config.api + "/api/geo", options)
-          .then(async function (response) {
-            loc = response.data;
-            if (loc) {
-              localStorage.setItem("loc", JSON.stringify(loc));
-            }
-            load();
-          })
-          .catch((e) => {
-            if (localStorage.getItem("loc")) {
-              loc = JSON.parse(localStorage.getItem("loc"));
-            }
-            load();
-          });
-        loading = false;
+          loading = true;
+          console.log(options);
+          await axios
+            .post(config.api + "/api/geo", options)
+            .then(async function (response) {
+              loc = response.data;
+              if (loc) {
+                localStorage.setItem("loc", JSON.stringify(loc));
+              }
+              load();
+            })
+            .catch((e) => {
+              if (localStorage.getItem("loc")) {
+                loc = JSON.parse(localStorage.getItem("loc"));
+              }
+              load();
+            });
+          loading = false;
+        });
       } catch (error) {}
     }
   });
@@ -171,12 +170,31 @@
       }, t);
     });
   }
+
+  let showPreloader = true;
+  let allowInfinite = true;
+
+  function loadMore() {
+    if (!allowInfinite) return;
+    allowInfinite = false;
+    showPreloader = false;
+
+    console.log("okok");
+
+    allowInfinite = true;
+  }
+
+  // infinite
+  // infiniteDistance={50}
+  // infinitePreloader={showPreloader}
+  // onInfinite={loadMore}
 </script>
 
 <Page
   ptr
   ptrMousewheel={true}
   onPtrRefresh={(done) => {
+    // feed = [];
     load();
     done();
   }}
@@ -258,31 +276,16 @@
     <Icon f7="pencil" size="25" />
   </Fab>
   {#if loading}
-    <Cardd style="padding: 20px;">
-      <SkeletonBlock
-        class="skeleton-effect-wave"
-        style="width: 100%; height: 20px; border-radius: 20px"
-      />
-      <br />
-      <SkeletonBlock
-        class="skeleton-effect-wave"
-        style="width: 70%; height: 20px; border-radius: 20px"
-      />
-    </Cardd>
-    <Cardd style="padding: 20px;">
-      <SkeletonBlock
-        class="skeleton-effect-wave"
-        style="width: 80%; height: 20px; border-radius: 20px"
-      />
-      <br />
-      <SkeletonBlock
-        class="skeleton-effect-wave"
-        style="width: 90%; height: 20px; border-radius: 20px"
-      />
-    </Cardd>
+    <Skeleton />
+  {:else if feed.length == 0 && !loading}
+    <BlockFooter>
+      <div>
+        <center> pull to refresh! </center>
+      </div>
+    </BlockFooter>
   {:else}
     {#each feed as f (v4())}
-      <Card {f} />
+      <Card justrender={false} {f} />
     {/each}
   {/if}
 </Page>

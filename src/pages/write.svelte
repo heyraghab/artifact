@@ -6,14 +6,10 @@
   import { Geolocation } from "@capacitor/geolocation";
   export let f7router;
   import {
-    Block,
     BlockHeader,
     Button,
     Icon,
-    Input,
     List,
-    ListIndex,
-    ListInput,
     ListItem,
     Navbar,
     Page,

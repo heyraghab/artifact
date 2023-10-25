@@ -12,7 +12,6 @@
     Block,
     Navbar,
     NavRight,
-    SkeletonBlock,
     Messagebar,
     Button,
     BlockFooter,
@@ -207,9 +206,7 @@
   let images = [];
   let thumbs = [];
   if (!_.has(f, "images")) {
-    if (f["images"].length == 0) {
-      f["images"] = [];
-    }
+    f["images"] = [];
   }
   Object.values(f.images).forEach((e) => {
     images.push({ url: e.url });
@@ -232,6 +229,7 @@
 
   import { inview } from "svelte-inview";
   import { sha256 } from "hash.js";
+  import Skeleton from "./skeleton.svelte";
   const options = {};
   let timeout_;
   export let justrender;
@@ -362,28 +360,7 @@
       {:else if comment == 0}
         <BlockFooter>Be The First One To Comment</BlockFooter>
       {:else}
-        <Card style="padding: 20px;">
-          <SkeletonBlock
-            class="skeleton-effect-wave"
-            style="width: 100%; height: 20px; border-radius: 20px"
-          />
-          <br />
-          <SkeletonBlock
-            class="skeleton-effect-wave"
-            style="width: 70%; height: 20px; border-radius: 20px"
-          />
-        </Card>
-        <Card style="padding: 20px;">
-          <SkeletonBlock
-            class="skeleton-effect-wave"
-            style="width: 80%; height: 20px; border-radius: 20px"
-          />
-          <br />
-          <SkeletonBlock
-            class="skeleton-effect-wave"
-            style="width: 90%; height: 20px; border-radius: 20px"
-          />
-        </Card>
+        <Skeleton />
       {/if}
 
       <Messagebar
@@ -398,7 +375,7 @@
     </Page>
   </Popup>
 
-  <News {images} {thumbs} {popup} {f} bind:opened={newsopened} />
+  <News {thumbs} {popup} {f} bind:opened={newsopened} />
 
   <!--
   CARD COMPONENT

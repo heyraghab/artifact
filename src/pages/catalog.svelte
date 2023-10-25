@@ -2,18 +2,15 @@
   import {
     Page,
     Navbar,
-    List,
-    ListItem,
-    Card as Cardd,
     Block,
     Searchbar,
-    SkeletonBlock,
     BlockFooter,
   } from "framework7-svelte";
   import axios from "axios";
   import { v4 } from "uuid";
   import { config } from "../js/init";
   import Card from "../components/card.svelte";
+  import Skeleton from "../components/skeleton.svelte";
 
   let q;
   let results = [];
@@ -75,28 +72,7 @@
         {error}
       </BlockFooter>
     {:else if loading && !processed}
-      <Cardd style="padding: 20px;">
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 100%; height: 20px; border-radius: 20px"
-        />
-        <br />
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 70%; height: 20px; border-radius: 20px"
-        />
-      </Cardd>
-      <Cardd style="padding: 20px;">
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 80%; height: 20px; border-radius: 20px"
-        />
-        <br />
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 90%; height: 20px; border-radius: 20px"
-        />
-      </Cardd>
+      <Skeleton />
     {:else if !loading && processed}
       {#each results as f (v4())}
         <Card justrender={true} {f} />
