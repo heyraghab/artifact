@@ -99,7 +99,7 @@
       </Cardd>
     {:else if !loading && processed}
       {#each results as f (v4())}
-        <Card {f} />
+        <Card justrender={true} {f} />
       {/each}
     {/if}
   </Block>

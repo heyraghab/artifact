@@ -41,7 +41,7 @@
       </Block>
     {/if}
     {#each posts as f (v4())}
-      <Card {f} />
+      <Card justrender={true} {f} />
     {/each}
   </Block>
 </Page>

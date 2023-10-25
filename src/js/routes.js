@@ -6,6 +6,7 @@ import History from "../pages/history.svelte";
 import Seen from "../pages/seen.svelte";
 import Activity from "../pages/activity.svelte";
 import NotFoundPage from "../pages/404.svelte";
+import Upvoted from "../pages/upvoted.svelte";
 
 var routes = [
   {
@@ -15,6 +16,10 @@ var routes = [
   {
     path: "/history",
     component: History,
+  },
+  {
+    path: "/upvoted",
+    component: Upvoted,
   },
   {
     path: "/seen",

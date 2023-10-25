@@ -4,6 +4,7 @@
     ActionsButton,
     ActionsGroup,
     Block,
+    BlockTitle,
     Icon,
     Link,
     NavLeft,
@@ -83,13 +84,18 @@
     >
       {#each thumbs as img (v4())}
         <img
-          class="h-28 w-28 object-cover rounded-md aspect-square"
+          class="h-28 {thumbs.length == 1
+            ? 'w-full'
+            : 'w-28 aspect-square'} object-cover rounded-md"
           src={img}
           alt=""
         />
       {/each}
     </div>
     <Block>
+      <div class="text-lg">
+        {f.heading}
+      </div>
       {@html sanitizeHtml(f.desc).replace(
         /href\=\"(.*)\"/,
         "onclick=\"window.open('$1')\" class='underline'",

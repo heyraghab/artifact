@@ -286,6 +286,8 @@
 
     <View id="view-seen" tab name="seen" />
 
+    <View id="view-upvoted" tab name="upvoted" />
+
     <View id="view-activity" tab name="activity" />
 
     <View id="view-history" tab name="history" url="/history" />

@@ -85,6 +85,7 @@
         } else {
           voted = true;
           vote = [...vote, data];
+          user.get("upvoted").get(f.hash).put(f.channel);
         }
       });
   }
@@ -404,11 +405,19 @@
 -->
 
   <Card outline>
-    <CardHeader style="padding-bottom: 0px;">
-      {f.heading}
+    <CardHeader class="line-clamp-3" style="padding-bottom: 0px;">
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div
+        on:click={() => {
+          newsopened = true;
+        }}
+      >
+        {f.heading}
+      </div>
     </CardHeader>
     <CardContent
-      class="line-clamp-2 mb-1"
+      class="line-clamp-2 mb-1 opacity-80"
       style="font-size: 13px;padding-top: 10px;"
     >
       <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -105,6 +105,7 @@
             f7.toast
               .create({
                 text: e.message,
+                closeTimeout: 2000
               })
               .open();
           });
