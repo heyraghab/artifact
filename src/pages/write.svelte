@@ -128,12 +128,6 @@
   async function handleImageChange(event) {
     const file = event.target.files[0];
     if (file) {
-      // let base64 = "";
-      // const reader = new FileReader();
-      // reader.onloadend = () => {
-      //   base64 = reader.result;
-      // };
-      // reader.readAsDataURL(file);
       f7.dialog.progress("uploading");
       client.uploadFile(file).then((filee) => {
         selectedImage = [...selectedImage, { url: filee.cdnUrl }];
@@ -145,6 +139,34 @@
   function removeimg(url) {
     selectedImage = selectedImage.filter((a) => a.url !== url);
   }
+
+  // axios
+  //   .get(
+  //     "https://newsapi.org/v2/everything?q=Delhi&sortBy=popularity&apiKey=05022151a37f4e7fb6b0befd60b1d156",
+  //   )
+  //   .then((res) => {
+  //     let data = res.data;
+  //     console.log(data.articles);
+  //     if (confirm()) {
+  //       let e = data.articles[(Math.random() * 100).toFixed(0)];
+  //       if (e.description && e.url) {
+  //         desc = e.description + "<br>" + `<a href="${e.url}">read more</a>`;
+  //       } else {
+  //         return;
+  //       }
+  //       if (e.urlToImage) {
+  //         selectedImage = [{ url: e.urlToImage }];
+  //       } else {
+  //         return;
+  //       }
+  //       if (e.title) {
+  //         heading = e.title;
+  //         post();
+  //       } else {
+  //         return;
+  //       }
+  //     }
+  //   });
 </script>
 
 <Navbar title="write" backLink=" " backLinkUrl="/" />

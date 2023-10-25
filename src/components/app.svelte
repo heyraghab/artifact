@@ -1,6 +1,6 @@
 <script>
-  import eruda from "eruda";
-  eruda.init();
+  // import eruda from "eruda";
+  // eruda.init();
   // locking orientation
   window.screen.orientation.lock("portrait");
 
@@ -283,6 +283,10 @@
     <View id="view-home" main tab tabActive url="/" />
 
     <View id="view-write" tab name="write" />
+
+    <View id="view-seen" tab name="seen" />
+
+    <View id="view-activity" tab name="activity" />
 
     <View id="view-history" tab name="history" url="/history" />
 

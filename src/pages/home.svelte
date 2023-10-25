@@ -18,6 +18,7 @@
   import axios from "axios";
   import Card from "../components/card.svelte";
   import { v4 } from "uuid";
+  import _ from "underscore";
 
   let sel = "city";
   let loading = false;
@@ -34,12 +35,22 @@
   let feed = [];
   let popoverOpened;
 
+  import { sha256 } from "hash.js";
+  let seen = {};
+  user.get("seen").once((a) => {
+    Object.entries(a).forEach(async (a) => {
+      if (a[1] == true) {
+        seen[a[0]] = a[1];
+      }
+    });
+  });
+
   async function fetchh(node) {
     try {
-      await db.get("#" + node).once(async (a, b) => {
+      await db.get("#" + node).once(async (a, bb) => {
         if (a) {
           delete a._;
-          Object.entries(a).forEach((a) => {
+          Object.entries(a).forEach(async (a) => {
             try {
               let data = new Object(JSON.parse(a[1]));
               if (
@@ -50,16 +61,23 @@
                 // if (!_.has(data, "images")) {
                 //   data.images = {};
                 // }
-                feed = [
-                  {
-                    heading: data.heading,
-                    time: data.time,
-                    desc: data.desc,
-                    uid: data.uid,
-                    images: data.images || {},
-                  },
-                  ...feed,
-                ];
+                let f = {
+                  heading: data.heading,
+                  time: data.time,
+                  desc: data.desc,
+                  uid: data.uid,
+                  images: data.images || {},
+                  hash: a[0],
+                  channel: bb
+                };
+                if (
+                  !_.has(
+                    seen,
+                    await sha256().update(JSON.stringify(f)).digest("hex"),
+                  )
+                ) {
+                  feed = [f, ...feed];
+                }
               }
             } catch (error) {}
           });
@@ -88,7 +106,9 @@
 
   function process() {
     feed = feed.filter((object, index) => {
-      const found = feed.findIndex((obj) => obj.uid === object.uid);
+      const found = feed.findIndex(
+        (obj) => obj.uid === object.uid || obj.heading === object.heading,
+      );
       return found === index;
     });
     feed.sort((b, a) => {

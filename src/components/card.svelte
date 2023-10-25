@@ -27,6 +27,7 @@
   import News from "./news.svelte";
 
   let comment = [];
+  let element;
   let messageText;
   let commentsopened = false;
   let comments_graph = db.get("comments").get(`#${f.uid}`);
@@ -204,14 +205,18 @@
   let popup;
   let images = [];
   let thumbs = [];
-  // if (!_.has(f, "images")) {
-  if (f["images"].length == 0) {
-    f["images"] = [];
+  if (!_.has(f, "images")) {
+    if (f["images"].length == 0) {
+      f["images"] = [];
+    }
   }
-  // }
   Object.values(f.images).forEach((e) => {
     images.push({ url: e.url });
-    thumbs.push(e.url + "-/preview/500x500/");
+    if (/ucarecdn/.test(e.url)) {
+      thumbs.push(e.url + "-/preview/500x500/");
+    } else {
+      thumbs.push(e.url);
+    }
   });
 
   f7ready(() => {
@@ -223,200 +228,240 @@
   });
 
   let newsopened = false;
+
+  import { inview } from "svelte-inview";
+  import { sha256 } from "hash.js";
+  const options = {};
+  let timeout_;
+  export let justrender;
 </script>
 
-<Popup
-  class="demo-popup"
-  opened={commentsopened}
-  onPopupClosed={() => {
-    commentsopened = false;
-    comment = [];
-    loadcommentsplace = {};
+<div
+  use:inview={options}
+  on:inview_enter={(event) => {
+    if (!justrender) {
+      timeout_ = setTimeout(async () => {
+        console.log("seen");
+        user.get("seenPostCopy").get(f.hash).put(f.channel);
+        user
+          .get("seen")
+          .get(await sha256().update(JSON.stringify(f)).digest("hex"))
+          .put(true);
+      }, 5000);
+    }
+  }}
+  on:inview_leave={(event) => {
+    if (!justrender) {
+      console.log("cleared");
+      clearInterval(timeout_);
+    }
   }}
 >
-  <Page>
-    <Navbar title={f.heading}>
-      <NavRight>
-        <Link popupClose>Close</Link>
-      </NavRight>
-    </Navbar>
-    {#if comment.length > 0}
-      {#each comment as f (v4())}
-        <Card>
-          <div class="flex">
-            <Button
-              disabled={true}
-              on:click={() => {
-                upvotecomment(f.uid);
-              }}
-              style="margin: 10px;"
-            >
-              <img
-                class="aspect-square h-4 w-4 object-cover"
-                src={`https://api.dicebear.com/7.x/identicon/svg?seed=${f.pub}&backgroundColor=transparent`}
-                alt=""
-              />
-            </Button>
-            <CardContent>
-              <div class="flex flex-col">
-                <div>
-                  @{f.name}
-                </div>
-                <div>
-                  {f.comment}
-                </div>
+  <Popup
+    class="demo-popup"
+    opened={commentsopened}
+    onPopupClosed={() => {
+      commentsopened = false;
+      comment = [];
+      loadcommentsplace = {};
+    }}
+  >
+    <Page>
+      <Navbar title={f.heading}>
+        <NavRight>
+          <Link popupClose>Close</Link>
+        </NavRight>
+      </Navbar>
+      {#if comment.length > 0}
+        {#each comment as f (v4())}
+          <Card>
+            <div class="flex">
+              <Button
+                disabled={true}
+                on:click={() => {
+                  upvotecomment(f.uid);
+                }}
+                style="margin: 10px;"
+              >
+                <img
+                  class="aspect-square h-4 w-4 rounded object-cover"
+                  src={`https://api.dicebear.com/7.x/identicon/svg?seed=${f.pub}&backgroundColor=transparent`}
+                  alt=""
+                />
+              </Button>
+              <div
+                class="flex flex-col mt-auto mb-auto items-center justify-center"
+              >
+                {f.comment}
               </div>
-            </CardContent>
-          </div>
-
-          <CardFooter style="margin-left: 23px;">
-            <Link
-              color="blue"
-              onClick={() => {
-                messageText = `@${f.name} `;
-                replyto = f.uid;
-                replytoname = f.name;
-              }}
-            >
-              reply
-            </Link>
-          </CardFooter>
-          {#if f.replies.length !== 0}
-            <div class="ml-4 flex flex-col">
-              {#if loadcommentsplace[f.uid] == true}
-                {#each f.replies as f (v4())}
-                  <Card outline>
-                    <CardFooter>
-                      @{f.name}: {f.comment.replace(/@(.*) /, "")}
-                    </CardFooter>
-                  </Card>
-                {/each}
-              {:else}
-                <Card outline>
-                  <CardFooter>
-                    @{f.replies[0].name}: {f.replies[0].comment.replace(
-                      /@(.*) /,
-                      "",
-                    )}
-                  </CardFooter>
-                </Card>
-              {/if}
             </div>
-          {/if}
-          {#if f.replies.length > 1 && loadcommentsplace[f.uid] == false}
-            <div style="margin-left: 23px;" class="mb-2">
+
+            <CardFooter style="margin-left: 23px;">
               <Link
+                color="blue"
                 onClick={() => {
-                  loadcommentsplace[f.uid] = true;
+                  messageText = `@${f.name} `;
+                  replyto = f.uid;
+                  replytoname = f.name;
                 }}
               >
-                load replies
+                reply
               </Link>
-            </div>
-          {/if}
+            </CardFooter>
+            {#if f.replies.length !== 0}
+              <div class="ml-4 flex flex-col">
+                {#if loadcommentsplace[f.uid] == true}
+                  {#each f.replies as f (v4())}
+                    <Card outline>
+                      <CardFooter>
+                        <div class="flex justify-center gap-2 items-center">
+                          <img
+                            class="aspect-square rounded h-4 w-4 object-cover"
+                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${f.pub}&backgroundColor=transparent`}
+                            alt=""
+                          />
+                          <div>
+                            {f.comment.replace(/@(.*) /, "")}
+                          </div>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  {/each}
+                {:else}
+                  <Card outline>
+                    <CardFooter>
+                      <div class="flex justify-center gap-2 items-center">
+                        <img
+                          class="aspect-square rounded h-4 w-4 object-cover"
+                          src={`https://api.dicebear.com/7.x/identicon/svg?seed=${f.replies[0].pub}&backgroundColor=transparent`}
+                          alt=""
+                        />
+                        <div>
+                          {f.replies[0].comment.replace(/@(.*) /, "")}
+                        </div>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                {/if}
+              </div>
+            {/if}
+            {#if f.replies.length > 1 && loadcommentsplace[f.uid] == false}
+              <div style="margin-left: 23px;" class="mb-2">
+                <Link
+                  onClick={() => {
+                    loadcommentsplace[f.uid] = true;
+                  }}
+                >
+                  load replies
+                </Link>
+              </div>
+            {/if}
+          </Card>
+        {/each}
+      {:else if comment == 0}
+        <BlockFooter>Be The First One To Comment</BlockFooter>
+      {:else}
+        <Card style="padding: 20px;">
+          <SkeletonBlock
+            class="skeleton-effect-wave"
+            style="width: 100%; height: 20px; border-radius: 20px"
+          />
+          <br />
+          <SkeletonBlock
+            class="skeleton-effect-wave"
+            style="width: 70%; height: 20px; border-radius: 20px"
+          />
         </Card>
-      {/each}
-    {:else if comment == 0}
-      <BlockFooter>Be The First One To Comment</BlockFooter>
-    {:else}
-      <Card style="padding: 20px;">
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 100%; height: 20px; border-radius: 20px"
-        />
-        <br />
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 70%; height: 20px; border-radius: 20px"
-        />
-      </Card>
-      <Card style="padding: 20px;">
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 80%; height: 20px; border-radius: 20px"
-        />
-        <br />
-        <SkeletonBlock
-          class="skeleton-effect-wave"
-          style="width: 90%; height: 20px; border-radius: 20px"
-        />
-      </Card>
-    {/if}
+        <Card style="padding: 20px;">
+          <SkeletonBlock
+            class="skeleton-effect-wave"
+            style="width: 80%; height: 20px; border-radius: 20px"
+          />
+          <br />
+          <SkeletonBlock
+            class="skeleton-effect-wave"
+            style="width: 90%; height: 20px; border-radius: 20px"
+          />
+        </Card>
+      {/if}
 
-    <Messagebar
-      placeholder="Type a comment"
-      value={messageText}
-      onInput={(e) => (messageText = e.target.value)}
-    >
-      <Button class="link icon-only" slot="inner-end" on:click={sendMessage}>
-        <Icon ios="f7:arrow_up_circle_fill" md="material:send" />
-      </Button>
-    </Messagebar>
-  </Page>
-</Popup>
+      <Messagebar
+        placeholder="Type a comment"
+        value={messageText}
+        onInput={(e) => (messageText = e.target.value)}
+      >
+        <Button class="link icon-only" slot="inner-end" on:click={sendMessage}>
+          <Icon ios="f7:arrow_up_circle_fill" md="material:send" />
+        </Button>
+      </Messagebar>
+    </Page>
+  </Popup>
 
-<News {images} {thumbs} {popup} {f} bind:opened={newsopened} />
+  <News {images} {thumbs} {popup} {f} bind:opened={newsopened} />
 
-<!--
+  <!--
   CARD COMPONENT
 -->
 
-<Card outline>
-  <CardHeader style="padding-bottom: 0px;">
-    {f.heading}
-  </CardHeader>
-  <CardContent
-    class="line-clamp-2 mb-1"
-    style="font-size: 13px;padding-top: 10px;"
-  >
+  <Card outline>
+    <CardHeader style="padding-bottom: 0px;">
+      {f.heading}
+    </CardHeader>
+    <CardContent
+      class="line-clamp-2 mb-1"
+      style="font-size: 13px;padding-top: 10px;"
+    >
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div
+        on:click={() => {
+          newsopened = true;
+        }}
+      >
+        {@html sanitizeHtml(f.desc || f.content).replace(/href\=\"(.*)\"/)}
+      </div>
+    </CardContent>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
+      class="flex overflow-x-scroll m-2"
       on:click={() => {
-        newsopened = true;
+        popup.open();
       }}
     >
-      {@html sanitizeHtml(f.desc || f.content).replace(/href\=\"(.*)\"/)}
+      {#each thumbs as img (v4())}
+        <img
+          class="h-28 {thumbs.length == 1
+            ? 'w-full'
+            : 'w-28 aspect-square'} ml-2 object-cover rounded-md"
+          src={img}
+          alt=""
+        />
+      {/each}
     </div>
-  </CardContent>
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div
-    class="flex overflow-x-scroll m-2"
-    on:click={() => {
-      popup.open();
-    }}
-  >
-    {#each thumbs as img (v4())}
-      <img
-        class="h-28 w-28 ml-2 object-cover rounded-md aspect-square"
-        src={img}
-        alt=""
-      />
-    {/each}
-  </div>
-  <CardFooter style="font-size: 12px;padding-top: 0px;">
-    <Button
-      disabled={voted}
-      color={voted ? "red" : "blue"}
-      small
-      on:click={() => {
-        if (!voted) {
-          upvote();
-        }
-      }}
-    >
-      {#if upvotingprogress}
-        <span class="animate-spin mr-0.5">
-          <Preloader size="15" color="blue" />
-        </span>
-      {:else}
-        <Icon f7="arrow_up" size="18" />
-      {/if}
-      {vote.length}
-    </Button>
-    <Button rounded onClick={loadcomments}>
-      <Icon f7="chat_bubble" size="19" />
-    </Button>
-  </CardFooter>
-</Card>
+    <CardFooter style="font-size: 12px;padding-top: 0px;">
+      <Button
+        disabled={voted}
+        color={voted ? "red" : "blue"}
+        small
+        on:click={() => {
+          if (!voted) {
+            upvote();
+          }
+        }}
+      >
+        {#if upvotingprogress}
+          <span class="animate-spin mr-0.5">
+            <Preloader size="15" color="blue" />
+          </span>
+        {:else}
+          <Icon f7="arrow_up" size="18" />
+        {/if}
+        {vote.length}
+      </Button>
+      <Button rounded onClick={loadcomments}>
+        <Icon f7="chat_bubble" size="19" />
+      </Button>
+    </CardFooter>
+  </Card>
+</div>
